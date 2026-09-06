@@ -1,9 +1,12 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import {
   MapPin, Zap, Armchair, Car, Volume1, Volume2, VolumeX, Star,
   Clock, Search, Coffee, Phone, ChevronDown, X, Wifi, DollarSign, ImageOff, Heart,
-  Info, Image, BookOpen, Sparkles, CheckCircle2, StickyNote,
+  Info, Image, BookOpen, Sparkles, CheckCircle2, StickyNote, Home, LogIn, LogOut,
 } from "lucide-react";
+import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { auth, db, googleProvider, firebaseEnabled } from "./firebase.js";
 
 // ---------------------------------------------------------------------------
 // Real shop data (Norcross / Peachtree Corners / Duluth, GA area).
@@ -613,6 +616,31 @@ function saveMapToStorage(key, map) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Optional cloud sync (Firebase). Signed-out users are unaffected — their
+// data stays in localStorage only, exactly as before. Signed-in users get
+// the same data synced to Firestore under their account, keyed by uid, so
+// it follows them to any device. localStorage still acts as an instant
+// local cache either way.
+// ---------------------------------------------------------------------------
+async function loadCloudData(uid) {
+  const snap = await getDoc(doc(db, "users", uid));
+  if (!snap.exists()) return null;
+  const data = snap.data();
+  return {
+    savedShops: new Map(Object.entries(data.savedShops || {})),
+    visitedShops: new Map(Object.entries(data.visitedShops || {})),
+  };
+}
+
+async function saveCloudField(uid, field, map) {
+  try {
+    await setDoc(doc(db, "users", uid), { [field]: Object.fromEntries(map) }, { merge: true });
+  } catch (err) {
+    console.error("Cloud sync failed:", err);
+  }
+}
+
 function haversineMiles(a, b) {
   const R = 3958.8;
   const dLat = ((b.lat - a.lat) * Math.PI) / 180;
@@ -1019,10 +1047,73 @@ export default function Perch() {
   const [expandedId, setExpandedId] = useState(SHOPS.find((s) => s.city === "norcross").id);
   const [savedShops, setSavedShops] = useState(() => loadMapFromStorage(STORAGE_KEYS.saved));
   const [visitedShops, setVisitedShops] = useState(() => loadMapFromStorage(STORAGE_KEYS.visited));
+  const [view, setView] = useState("browse"); // "browse" | "saved" | "visited"
 
+  // --- Account (optional) ---
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(firebaseEnabled);
+  const [authError, setAuthError] = useState("");
+  const cloudSyncedRef = useRef(false); // avoids writing straight back to the cloud right after loading from it
+
+  useEffect(() => {
+    if (!firebaseEnabled) return;
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+      setAuthLoading(false);
+      if (!firebaseUser) return;
+
+      const cloud = await loadCloudData(firebaseUser.uid);
+      const localSaved = loadMapFromStorage(STORAGE_KEYS.saved);
+      const localVisited = loadMapFromStorage(STORAGE_KEYS.visited);
+
+      cloudSyncedRef.current = true;
+      if (cloud) {
+        // Merge in any local guest data this browser had that the cloud doesn't yet.
+        localSaved.forEach((v, k) => { if (!cloud.savedShops.has(k)) cloud.savedShops.set(k, v); });
+        localVisited.forEach((v, k) => { if (!cloud.visitedShops.has(k)) cloud.visitedShops.set(k, v); });
+        setSavedShops(cloud.savedShops);
+        setVisitedShops(cloud.visitedShops);
+      } else {
+        // First sign-in on this account — seed the cloud with local guest data, if any.
+        setSavedShops(localSaved);
+        setVisitedShops(localVisited);
+      }
+    });
+    return unsubscribe;
+  }, []);
+
+  async function handleSignIn() {
+    setAuthError("");
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+      setAuthError(err.message || "Sign-in failed. Please try again.");
+    }
+  }
+
+  async function handleSignOut() {
+    await signOut(auth);
+    cloudSyncedRef.current = false;
+  }
+
+  // Local cache always updates instantly.
   useEffect(() => { saveMapToStorage(STORAGE_KEYS.saved, savedShops); }, [savedShops]);
   useEffect(() => { saveMapToStorage(STORAGE_KEYS.visited, visitedShops); }, [visitedShops]);
-  const [view, setView] = useState("browse"); // "browse" | "saved" | "visited"
+
+  // Cloud writes are debounced (500ms) so typing a note doesn't fire a
+  // Firestore write on every keystroke, and skipped right after a cloud
+  // load so we don't immediately write the same data straight back.
+  useEffect(() => {
+    if (!user || !cloudSyncedRef.current) return;
+    const t = setTimeout(() => saveCloudField(user.uid, "savedShops", savedShops), 500);
+    return () => clearTimeout(t);
+  }, [savedShops, user]);
+
+  useEffect(() => {
+    if (!user || !cloudSyncedRef.current) return;
+    const t = setTimeout(() => saveCloudField(user.uid, "visitedShops", visitedShops), 500);
+    return () => clearTimeout(t);
+  }, [visitedShops, user]);
 
   function toggleSave(shop) {
     setSavedShops((prev) => {
@@ -1185,7 +1276,7 @@ export default function Perch() {
 
       {/* Header */}
       <header
-        className="px-6 py-5 flex items-center justify-between shadow-[0_2px_10px_rgba(0,0,0,0.08)]"
+        className="px-6 py-5 flex items-center justify-between flex-wrap gap-y-3 shadow-[0_2px_10px_rgba(0,0,0,0.08)]"
         style={{ backgroundColor: "var(--accent)" }}
       >
         <div className="flex items-center gap-2.5">
@@ -1215,7 +1306,16 @@ export default function Perch() {
             {view === "saved" ? "Your saved spots" : view === "visited" ? "Places you've tried" : `📍 ${city.label}`}
           </span>
           <button
-            onClick={() => setView((v) => (v === "visited" ? "browse" : "visited"))}
+            onClick={() => setView("browse")}
+            aria-label="Home"
+            title="Home"
+            className={`flex items-center justify-center w-8 h-8 rounded-full border transition-all
+              ${view === "browse" ? "bg-white text-[var(--accent)] border-white" : "bg-white/10 text-white border-white/30 hover:bg-white/20"}`}
+          >
+            <Home size={14} />
+          </button>
+          <button
+            onClick={() => setView("visited")}
             className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-all
               ${view === "visited" ? "bg-white text-[var(--accent)] border-white" : "bg-white/10 text-white border-white/30 hover:bg-white/20"}`}
           >
@@ -1223,15 +1323,54 @@ export default function Perch() {
             Visited{visitedShops.size > 0 ? ` (${visitedShops.size})` : ""}
           </button>
           <button
-            onClick={() => setView((v) => (v === "saved" ? "browse" : "saved"))}
+            onClick={() => setView("saved")}
             className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-all
               ${view === "saved" ? "bg-white text-[var(--accent)] border-white" : "bg-white/10 text-white border-white/30 hover:bg-white/20"}`}
           >
             <Heart size={13} fill={view === "saved" ? "var(--accent)" : "none"} />
             Saved{savedShops.size > 0 ? ` (${savedShops.size})` : ""}
           </button>
+
+          {firebaseEnabled && (
+            <div className="flex items-center gap-2 pl-2 border-l border-white/25">
+              {authLoading ? (
+                <span className="text-[11px] text-white/60 font-mono">…</span>
+              ) : user ? (
+                <button
+                  onClick={handleSignOut}
+                  title="Sign out"
+                  className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/30 rounded-full pl-1 pr-2.5 py-1 transition-all"
+                >
+                  {user.photoURL ? (
+                    <img src={user.photoURL} alt="" className="w-5 h-5 rounded-full" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="w-5 h-5 rounded-full bg-white/30 flex items-center justify-center text-[9px] text-white font-semibold">
+                      {(user.displayName || user.email || "?")[0].toUpperCase()}
+                    </div>
+                  )}
+                  <span className="text-[11px] text-white font-medium max-w-[90px] truncate hidden sm:inline">
+                    {user.displayName || user.email}
+                  </span>
+                  <LogOut size={12} className="text-white/70" />
+                </button>
+              ) : (
+                <button
+                  onClick={handleSignIn}
+                  className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white text-[var(--accent)] hover:bg-[#FFF3E9] transition-all"
+                >
+                  <LogIn size={13} />
+                  Sign in with Google
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </header>
+      {firebaseEnabled && authError && (
+        <div className="max-w-2xl mx-auto px-6 pt-2">
+          <p className="text-[11px] text-[#C0392B]">{authError}</p>
+        </div>
+      )}
 
       {/* City switcher */}
       {view === "browse" && (
