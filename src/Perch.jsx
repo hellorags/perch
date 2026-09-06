@@ -4,7 +4,7 @@ import {
   Clock, Search, Coffee, Phone, ChevronDown, X, Wifi, DollarSign, ImageOff, Heart,
   Info, Image, BookOpen, Sparkles, CheckCircle2, StickyNote, Home, LogIn, LogOut,
 } from "lucide-react";
-import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
+import { onAuthStateChanged, signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db, googleProvider, firebaseEnabled } from "./firebase.js";
 
@@ -1343,7 +1343,24 @@ export default function Perch() {
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
-      setAuthError(err.message || "Sign-in failed. Please try again.");
+      const popupFailed = [
+        "auth/popup-blocked",
+        "auth/popup-closed-by-user",
+        "auth/cancelled-popup-request",
+      ].includes(err.code);
+      if (popupFailed) {
+        // Browser blocked the popup (common on a visitor's first time on a new
+        // site) — fall back to a full-page redirect instead, which can't be
+        // popup-blocked. onAuthStateChanged picks up the result when the
+        // page comes back.
+        try {
+          await signInWithRedirect(auth, googleProvider);
+        } catch (redirectErr) {
+          setAuthError(redirectErr.message || "Sign-in failed. Please try again.");
+        }
+      } else {
+        setAuthError(err.message || "Sign-in failed. Please try again.");
+      }
     }
   }
 
@@ -1591,47 +1608,47 @@ export default function Perch() {
             <p className="text-[11px] text-[#FFE9D6] -mt-0.5">{theme.tagline}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center bg-white/10 border border-white/30 rounded-full p-0.5">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center bg-white/10 border border-white/30 rounded-full p-1">
             {Object.values(THEMES).map((t) => (
               <button
                 key={t.key}
                 onClick={() => setThemeKey(t.key)}
                 title={`${t.label} theme`}
-                className={`flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full transition-all
+                className={`flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-full transition-all
                   ${themeKey === t.key ? "bg-white text-[var(--accent)]" : "text-white/80 hover:text-white"}`}
               >
-                <span>{t.emoji}</span>
+                <span className="text-base">{t.emoji}</span>
                 <span className="hidden lg:inline">{t.label}</span>
               </button>
             ))}
           </div>
 
-          <div className="flex items-center bg-white/10 border border-white/30 rounded-full p-0.5">
+          <div className="flex items-center bg-white/10 border border-white/30 rounded-full p-1">
             <button
               onClick={() => setView("browse")}
               title="Home"
-              className={`flex items-center justify-center w-8 h-8 rounded-full transition-all
+              className={`flex items-center justify-center w-11 h-11 rounded-full transition-all
                 ${view === "browse" ? "bg-white text-[var(--accent)]" : "text-white/80 hover:text-white"}`}
             >
-              <Home size={14} />
+              <Home size={19} />
             </button>
             <button
               onClick={() => setView("visited")}
               title="Visited"
-              className={`flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-full transition-all
+              className={`flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-full transition-all
                 ${view === "visited" ? "bg-white text-[var(--accent)]" : "text-white/80 hover:text-white"}`}
             >
-              <CheckCircle2 size={14} fill={view === "visited" ? "var(--accent)" : "none"} strokeWidth={view === "visited" ? 0 : 2} />
+              <CheckCircle2 size={19} fill={view === "visited" ? "var(--accent)" : "none"} strokeWidth={view === "visited" ? 0 : 2} />
               {visitedShops.size > 0 && <span>{visitedShops.size}</span>}
             </button>
             <button
               onClick={() => setView("saved")}
               title="Saved"
-              className={`flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-full transition-all
+              className={`flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-full transition-all
                 ${view === "saved" ? "bg-white text-[var(--accent)]" : "text-white/80 hover:text-white"}`}
             >
-              <Heart size={14} fill={view === "saved" ? "var(--accent)" : "none"} />
+              <Heart size={19} fill={view === "saved" ? "var(--accent)" : "none"} />
               {savedShops.size > 0 && <span>{savedShops.size}</span>}
             </button>
           </div>
@@ -1639,32 +1656,32 @@ export default function Perch() {
           {firebaseEnabled && (
             <div className="flex items-center">
               {authLoading ? (
-                <span className="text-[11px] text-white/60 font-mono">…</span>
+                <span className="text-sm text-white/60 font-mono">…</span>
               ) : user ? (
                 <button
                   onClick={handleSignOut}
                   title="Sign out"
-                  className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/30 rounded-full pl-1 pr-2.5 py-1 transition-all"
+                  className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/30 rounded-full pl-1.5 pr-4 py-1.5 transition-all"
                 >
                   {user.photoURL ? (
-                    <img src={user.photoURL} alt="" className="w-5 h-5 rounded-full" referrerPolicy="no-referrer" />
+                    <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full" referrerPolicy="no-referrer" />
                   ) : (
-                    <div className="w-5 h-5 rounded-full bg-white/30 flex items-center justify-center text-[9px] text-white font-semibold">
+                    <div className="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center text-sm text-white font-semibold">
                       {(user.displayName || user.email || "?")[0].toUpperCase()}
                     </div>
                   )}
-                  <span className="text-[11px] text-white font-medium max-w-[90px] truncate hidden lg:inline">
+                  <span className="text-sm text-white font-medium max-w-[120px] truncate hidden lg:inline">
                     {user.displayName || user.email}
                   </span>
-                  <LogOut size={12} className="text-white/70" />
+                  <LogOut size={17} className="text-white/70" />
                 </button>
               ) : (
                 <button
                   onClick={handleSignIn}
                   title="Sign in with Google"
-                  className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white text-[var(--accent)] hover:bg-[var(--chip-bg)] transition-all"
+                  className="flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-full bg-white text-[var(--accent)] hover:bg-[var(--chip-bg)] transition-all"
                 >
-                  <LogIn size={13} />
+                  <LogIn size={18} />
                   <span className="hidden lg:inline">Sign in</span>
                 </button>
               )}
@@ -1688,8 +1705,8 @@ export default function Perch() {
             onChange={(e) => { setCityInput(e.target.value); setCityNotFound(false); setLiveError(""); }}
             placeholder={
               GOOGLE_PLACES_API_KEY
-                ? `Currently browsing ${city.label} — try "Rome, GA" or "Austin, TX"...`
-                : `Currently browsing ${city.label} — add an API key to search any US city`
+                ? `Where would you like to perch? (City, State)`
+                : `Where would you like to perch? Add an API key to search any US city`
             }
             className="w-full bg-white border border-[#F0E4D8] rounded-full pl-10 pr-4 py-2.5 text-sm text-[#171512] placeholder-[#B5AFA0] outline-none shadow-[0_2px_8px_rgba(120,90,60,0.06)] focus:border-[var(--accent)] transition-shadow"
           />
