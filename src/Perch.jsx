@@ -804,9 +804,38 @@ function ShopArt({ shop, height = 96, MascotIcon }) {
 // flap via CSS animation (wing-left/wing-right classes, defined once
 // globally). Tested by rendering to real pixels at 24px and 48px before
 // finalizing.
+// Shared by both mascots: pupils shift slightly toward the mouse cursor,
+// clamped so they never leave the eye whites. Each mascot instance measures
+// its own position, so every bird on screen looks toward the cursor
+// independently (the one in the header, and every one on a card).
+function useEyeTracking(maxOffset = 0.7) {
+  const ref = useRef(null);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    function handleMove(e) {
+      const el = ref.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = e.clientX - cx;
+      const dy = e.clientY - cy;
+      const dist = Math.hypot(dx, dy) || 1;
+      const pull = Math.min(1, dist / 200);
+      setOffset({ x: (dx / dist) * maxOffset * pull, y: (dy / dist) * maxOffset * pull });
+    }
+    window.addEventListener("mousemove", handleMove, { passive: true });
+    return () => window.removeEventListener("mousemove", handleMove);
+  }, [maxOffset]);
+
+  return [ref, offset];
+}
+
 function LogoBuddy({ size = 24, className = "" }) {
+  const [svgRef, eye] = useEyeTracking(0.7);
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
+    <svg ref={svgRef} width={size} height={size} viewBox="0 0 24 24" className={className}>
       <g fill="currentColor" stroke="#2E2016" strokeWidth="0.6" strokeLinejoin="round">
         {/* the cup it's perched on, plus two simple round feet */}
         <path d="M6 17.5h12v2.3a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-2.3Z" opacity="0.55" />
@@ -838,13 +867,15 @@ function LogoBuddy({ size = 24, className = "" }) {
       {/* beak */}
       <path d="M10.6 13.6l1.4 1.7l1.4-1.7Z" fill="#2E2016" />
 
-      {/* big eyes: white base + dark pupil + sparkle */}
+      {/* big eyes: white base stays put, pupil + sparkle track the cursor */}
       <circle cx="8.6" cy="10.9" r="2.5" fill="#FFF8F1" stroke="#2E2016" strokeWidth="0.4" />
       <circle cx="15.4" cy="10.9" r="2.5" fill="#FFF8F1" stroke="#2E2016" strokeWidth="0.4" />
-      <circle cx="9.1" cy="11.4" r="1.35" fill="#2E2016" />
-      <circle cx="15.9" cy="11.4" r="1.35" fill="#2E2016" />
-      <circle cx="8.5" cy="10.7" r="0.5" fill="#FFF8F1" />
-      <circle cx="15.3" cy="10.7" r="0.5" fill="#FFF8F1" />
+      <g transform={`translate(${eye.x} ${eye.y})`}>
+        <circle cx="9.1" cy="11.4" r="1.35" fill="#2E2016" />
+        <circle cx="15.9" cy="11.4" r="1.35" fill="#2E2016" />
+        <circle cx="8.5" cy="10.7" r="0.5" fill="#FFF8F1" />
+        <circle cx="15.3" cy="10.7" r="0.5" fill="#FFF8F1" />
+      </g>
 
       {/* blush */}
       <ellipse cx="6.6" cy="13.6" rx="1.5" ry="1" fill="#FF9E8A" opacity="0.7" />
@@ -857,8 +888,9 @@ function LogoBuddy({ size = 24, className = "" }) {
 // with a tiny leaf sprout instead of a feather tuft. Same outlines and
 // wing-flap animation applied for consistency across both themes.
 function MatchaBuddy({ size = 24, className = "" }) {
+  const [svgRef, eye] = useEyeTracking(0.7);
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
+    <svg ref={svgRef} width={size} height={size} viewBox="0 0 24 24" className={className}>
       <g fill="currentColor" stroke="#26311A" strokeWidth="0.6" strokeLinejoin="round">
         {/* the bowl it's perched on, plus two simple round feet */}
         <path d="M5.5 17.5c0 2.6 2.9 4.3 6.5 4.3s6.5-1.7 6.5-4.3H5.5Z" opacity="0.55" />
@@ -890,13 +922,15 @@ function MatchaBuddy({ size = 24, className = "" }) {
       {/* beak */}
       <path d="M10.6 13.6l1.4 1.7l1.4-1.7Z" fill="#26311A" />
 
-      {/* big eyes: white base + dark pupil + sparkle */}
+      {/* big eyes: white base stays put, pupil + sparkle track the cursor */}
       <circle cx="8.6" cy="10.9" r="2.5" fill="#FFF8F1" stroke="#26311A" strokeWidth="0.4" />
       <circle cx="15.4" cy="10.9" r="2.5" fill="#FFF8F1" stroke="#26311A" strokeWidth="0.4" />
-      <circle cx="9.1" cy="11.4" r="1.35" fill="#26311A" />
-      <circle cx="15.9" cy="11.4" r="1.35" fill="#26311A" />
-      <circle cx="8.5" cy="10.7" r="0.5" fill="#FFF8F1" />
-      <circle cx="15.3" cy="10.7" r="0.5" fill="#FFF8F1" />
+      <g transform={`translate(${eye.x} ${eye.y})`}>
+        <circle cx="9.1" cy="11.4" r="1.35" fill="#26311A" />
+        <circle cx="15.9" cy="11.4" r="1.35" fill="#26311A" />
+        <circle cx="8.5" cy="10.7" r="0.5" fill="#FFF8F1" />
+        <circle cx="15.3" cy="10.7" r="0.5" fill="#FFF8F1" />
+      </g>
 
       {/* blush */}
       <ellipse cx="6.6" cy="13.6" rx="1.5" ry="1" fill="#FF9E8A" opacity="0.7" />
@@ -1476,15 +1510,15 @@ export default function Perch() {
         .steam-wisp:nth-child(2) { animation-delay: 0.4s; }
         .steam-wisp:nth-child(3) { animation-delay: 0.8s; }
         @keyframes wingFlapLeft {
-          0%, 100% { transform: rotate(0deg); }
-          50% { transform: rotate(-22deg); }
+          0%, 100% { transform: rotate(-6deg) scaleY(1); }
+          50% { transform: rotate(-45deg) scaleY(1.12); }
         }
         @keyframes wingFlapRight {
-          0%, 100% { transform: rotate(0deg); }
-          50% { transform: rotate(22deg); }
+          0%, 100% { transform: rotate(6deg) scaleY(1); }
+          50% { transform: rotate(45deg) scaleY(1.12); }
         }
-        .wing-left { transform-box: fill-box; transform-origin: 90% 30%; animation: wingFlapLeft 1.6s ease-in-out infinite; }
-        .wing-right { transform-box: fill-box; transform-origin: 10% 30%; animation: wingFlapRight 1.6s ease-in-out infinite; }
+        .wing-left { transform-box: fill-box; transform-origin: 90% 25%; animation: wingFlapLeft 0.9s ease-in-out infinite; }
+        .wing-right { transform-box: fill-box; transform-origin: 10% 25%; animation: wingFlapRight 0.9s ease-in-out infinite; }
         @keyframes logoFloat {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-3px); }
