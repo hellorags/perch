@@ -1277,7 +1277,7 @@ export default function Perch() {
     catch { return "coffee"; }
   });
   const theme = THEMES[themeKey];
-  const Mascot = themeKey === "matcha" ? MatchaBuddy : LogoBuddy;
+  const Mascot = LogoBuddy; // same bird in both themes now — the branch already carries the brown/green theming
   useEffect(() => {
     try { localStorage.setItem("perch:theme", themeKey); } catch {}
   }, [themeKey]);
