@@ -42,6 +42,35 @@ function findCity(query) {
 const GOOGLE_PLACES_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || "";
 const LIVE_ACCENT = "#6F4630";
 
+// Two full visual identities the person can switch between — color, page
+// gradient, tagline, and mascot all change together, not just a color swap.
+const THEMES = {
+  coffee: {
+    key: "coffee",
+    label: "Coffee",
+    emoji: "☕",
+    accent: "#6F4630",
+    bgClass: "bg-gradient-to-b from-[#FFF8F1] via-[#FFF3E9] to-[#FDEADB]",
+    chipBg: "#FFF3E9",
+    cardBg: "#FFF8F2",
+    tagline: "☕ find your next cozy spot to settle in",
+    heartEmoji: "🤎",
+    jarEmoji: "🫙",
+  },
+  matcha: {
+    key: "matcha",
+    label: "Matcha",
+    emoji: "🍵",
+    accent: "#5E7A3F",
+    bgClass: "bg-gradient-to-b from-[#F6F8EE] via-[#EFF4E2] to-[#E3EDD1]",
+    chipBg: "#EFF4E2",
+    cardBg: "#F5F8ED",
+    tagline: "🍵 find your next cozy spot to settle in",
+    heartEmoji: "🍵",
+    jarEmoji: "🍃",
+  },
+};
+
 const DAY_ABBR = {
   Monday: "Mon", Tuesday: "Tue", Wednesday: "Wed", Thursday: "Thu",
   Friday: "Fri", Saturday: "Sat", Sunday: "Sun",
@@ -92,6 +121,40 @@ function scanReviewsForSignals(reviews) {
   if (quietScore > 0 && quietScore >= loudScore) noise = "quiet";
   else if (loudScore > 0) noise = "moderate";
   return { outlets: hasOutlets ? "available" : "unknown", noise };
+}
+
+// Suggests real, disambiguated US cities as the person types — e.g. typing
+// "Rome" returns separate entries for Rome, GA and Rome, NY, so there's no
+// guessing which one they mean before the actual search even runs.
+async function autocompleteCities(input) {
+  if (!GOOGLE_PLACES_API_KEY || !input || input.trim().length < 2) return [];
+  try {
+    const res = await fetch("https://places.googleapis.com/v1/places:autocomplete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": GOOGLE_PLACES_API_KEY,
+      },
+      body: JSON.stringify({
+        input,
+        includedPrimaryTypes: ["locality"],
+        includedRegionCodes: ["us"],
+      }),
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.suggestions || [])
+      .map((s) => s.placePrediction)
+      .filter(Boolean)
+      .map((p) => ({
+        id: p.placeId,
+        mainText: p.structuredFormat?.mainText?.text || p.text?.text || "",
+        secondaryText: p.structuredFormat?.secondaryText?.text || "",
+        fullText: p.text?.text || "",
+      }));
+  } catch {
+    return [];
+  }
 }
 
 async function searchLivePlaces(cityText) {
@@ -702,7 +765,7 @@ function hashStr(s) {
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
   return h;
 }
-function ShopArt({ shop, height = 96 }) {
+function ShopArt({ shop, height = 96, MascotIcon }) {
   const [c1, c2] = ART_PALETTES[hashStr(shop.id) % ART_PALETTES.length];
   const gradId = `grad-${shop.id}`;
   return (
@@ -724,7 +787,7 @@ function ShopArt({ shop, height = 96 }) {
             <span className="steam-wisp w-0.5 h-2 rounded-full bg-black/25 block" />
             <span className="steam-wisp w-0.5 h-2 rounded-full bg-black/25 block" />
           </div>
-          <Coffee size={height > 80 ? 30 : 20} className="text-black/40" />
+          <MascotIcon size={height > 80 ? 52 : 38} className="text-black/50" />
         </div>
       </div>
       <div className="absolute bottom-1.5 right-2 flex items-center gap-1 text-[9px] text-black/40 font-mono bg-white/40 px-1.5 py-0.5 rounded">
@@ -733,6 +796,115 @@ function ShopArt({ shop, height = 96 }) {
     </div>
   );
 }
+
+// The header mascot for the coffee theme — a little bird perched on a
+// coffee cup, a literal pun on the app's own name ("Perch"). Every
+// currentColor body part gets a thin dark outline so wings/tail/body read
+// as distinct parts instead of merging into one silhouette, and the wings
+// flap via CSS animation (wing-left/wing-right classes, defined once
+// globally). Tested by rendering to real pixels at 24px and 48px before
+// finalizing.
+function LogoBuddy({ size = 24, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
+      <g fill="currentColor" stroke="#2E2016" strokeWidth="0.6" strokeLinejoin="round">
+        {/* the cup it's perched on, plus two simple round feet */}
+        <path d="M6 17.5h12v2.3a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-2.3Z" opacity="0.55" />
+        <ellipse cx="8.6" cy="18.6" rx="1.3" ry="1" />
+        <ellipse cx="15.4" cy="18.6" rx="1.3" ry="1" />
+
+        {/* tail, sticking out the back */}
+        <path d="M16.3 16.8l3.2.7l-2 2.4Z" />
+        <path d="M17.2 15.1l3.5-.4l-1.7 2.9Z" />
+
+        {/* wings: flap via CSS animation */}
+        <ellipse className="wing-left" cx="5.4" cy="12.8" rx="2.6" ry="3.6" />
+        <ellipse className="wing-right" cx="18.6" cy="12.8" rx="2.6" ry="3.6" />
+
+        {/* round bird body/head */}
+        <ellipse cx="12" cy="11.8" rx="7.3" ry="7" />
+      </g>
+
+      {/* head feather tuft */}
+      <path d="M10.8 3.3l.6 1.8M12.5 2.8v2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" fill="none" />
+
+      {/* belly patch for two-tone depth */}
+      <ellipse cx="12" cy="15.3" rx="4.2" ry="2.6" fill="#FFF8F1" opacity="0.3" stroke="#2E2016" strokeWidth="0.4" strokeOpacity="0.3" />
+
+      {/* eyebrows */}
+      <path d="M6.8 8.6c.9-.7 2-.7 2.9-.1" stroke="#2E2016" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+      <path d="M17.2 8.6c-.9-.7-2-.7-2.9-.1" stroke="#2E2016" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+
+      {/* beak */}
+      <path d="M10.6 13.6l1.4 1.7l1.4-1.7Z" fill="#2E2016" />
+
+      {/* big eyes: white base + dark pupil + sparkle */}
+      <circle cx="8.6" cy="10.9" r="2.5" fill="#FFF8F1" stroke="#2E2016" strokeWidth="0.4" />
+      <circle cx="15.4" cy="10.9" r="2.5" fill="#FFF8F1" stroke="#2E2016" strokeWidth="0.4" />
+      <circle cx="9.1" cy="11.4" r="1.35" fill="#2E2016" />
+      <circle cx="15.9" cy="11.4" r="1.35" fill="#2E2016" />
+      <circle cx="8.5" cy="10.7" r="0.5" fill="#FFF8F1" />
+      <circle cx="15.3" cy="10.7" r="0.5" fill="#FFF8F1" />
+
+      {/* blush */}
+      <ellipse cx="6.6" cy="13.6" rx="1.5" ry="1" fill="#FF9E8A" opacity="0.7" />
+      <ellipse cx="17.4" cy="13.6" rx="1.5" ry="1" fill="#FF9E8A" opacity="0.7" />
+    </svg>
+  );
+}
+
+// The matcha-theme counterpart — same bird, perched on a whisked bowl,
+// with a tiny leaf sprout instead of a feather tuft. Same outlines and
+// wing-flap animation applied for consistency across both themes.
+function MatchaBuddy({ size = 24, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
+      <g fill="currentColor" stroke="#26311A" strokeWidth="0.6" strokeLinejoin="round">
+        {/* the bowl it's perched on, plus two simple round feet */}
+        <path d="M5.5 17.5c0 2.6 2.9 4.3 6.5 4.3s6.5-1.7 6.5-4.3H5.5Z" opacity="0.55" />
+        <ellipse cx="8.3" cy="18.6" rx="1.3" ry="1" />
+        <ellipse cx="15.7" cy="18.6" rx="1.3" ry="1" />
+
+        {/* tail, sticking out the back */}
+        <path d="M16.3 16.8l3.2.7l-2 2.4Z" />
+        <path d="M17.2 15.1l3.5-.4l-1.7 2.9Z" />
+
+        {/* wings: flap via CSS animation */}
+        <ellipse className="wing-left" cx="5.4" cy="12.8" rx="2.6" ry="3.6" />
+        <ellipse className="wing-right" cx="18.6" cy="12.8" rx="2.6" ry="3.6" />
+
+        {/* round bird body/head */}
+        <ellipse cx="12" cy="11.8" rx="7.3" ry="7" />
+      </g>
+
+      {/* leaf sprout instead of a feather tuft */}
+      <path d="M12 2.9c1.5.6 2.2 1.9 1.6 3.3c-1.5-.1-2.5-1.4-1.6-3.3Z" fill="currentColor" stroke="#26311A" strokeWidth="0.5" />
+
+      {/* belly patch for two-tone depth */}
+      <ellipse cx="12" cy="15.3" rx="4.2" ry="2.6" fill="#FFF8F1" opacity="0.3" stroke="#26311A" strokeWidth="0.4" strokeOpacity="0.3" />
+
+      {/* eyebrows */}
+      <path d="M6.8 8.6c.9-.7 2-.7 2.9-.1" stroke="#26311A" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+      <path d="M17.2 8.6c-.9-.7-2-.7-2.9-.1" stroke="#26311A" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+
+      {/* beak */}
+      <path d="M10.6 13.6l1.4 1.7l1.4-1.7Z" fill="#26311A" />
+
+      {/* big eyes: white base + dark pupil + sparkle */}
+      <circle cx="8.6" cy="10.9" r="2.5" fill="#FFF8F1" stroke="#26311A" strokeWidth="0.4" />
+      <circle cx="15.4" cy="10.9" r="2.5" fill="#FFF8F1" stroke="#26311A" strokeWidth="0.4" />
+      <circle cx="9.1" cy="11.4" r="1.35" fill="#26311A" />
+      <circle cx="15.9" cy="11.4" r="1.35" fill="#26311A" />
+      <circle cx="8.5" cy="10.7" r="0.5" fill="#FFF8F1" />
+      <circle cx="15.3" cy="10.7" r="0.5" fill="#FFF8F1" />
+
+      {/* blush */}
+      <ellipse cx="6.6" cy="13.6" rx="1.5" ry="1" fill="#FF9E8A" opacity="0.7" />
+      <ellipse cx="17.4" cy="13.6" rx="1.5" ry="1" fill="#FF9E8A" opacity="0.7" />
+    </svg>
+  );
+}
+
 
 function Pill({ children, tone = "neutral" }) {
   const tones = {
@@ -748,19 +920,19 @@ function Pill({ children, tone = "neutral" }) {
   );
 }
 
-function TicketStub({ shop, distance, expanded, onToggle, saved, onToggleSave, accent, cityLabel, showDistance = true, visited, onToggleVisited, note, onNoteChange, myRating = 0, onRatingChange }) {
+function TicketStub({ shop, distance, expanded, onToggle, saved, onToggleSave, accent, cityLabel, showDistance = true, visited, onToggleVisited, note, onNoteChange, myRating = 0, onRatingChange, MascotIcon }) {
   const status = getOpenStatus(shop);
   const NoiseIcon = NOISE_ICON[shop.noise] || Volume2;
   const priceLabel = shop.price ? "$".repeat(shop.price) + " · Affordable" : "Pricing not listed";
   const [tab, setTab] = useState("overview");
-  const hasPhotos = shop.photos && shop.photos.length > 0;
+  const hasPhotos = Boolean(shop.photos && shop.photos.length > 0);
   const hasSpecials = shop.specials && shop.specials.length > 0;
 
   return (
     <div
       className={`w-full relative rounded-[22px] transition-all duration-200 overflow-hidden
         ${expanded
-          ? "shadow-[0_10px_30px_-8px_var(--accent-glow)] ring-2 ring-[var(--accent)] bg-[#FFF8F2]"
+          ? "shadow-[0_10px_30px_-8px_var(--accent-glow)] ring-2 ring-[var(--accent)] bg-[var(--card-bg)]"
           : "shadow-[0_2px_10px_rgba(120,90,60,0.08)] hover:shadow-[0_8px_22px_rgba(120,90,60,0.14)] hover:-translate-y-0.5 bg-[#FFFFFF]"}`}
       style={accent ? { "--accent": accent, "--accent-glow": accent + "59" } : undefined}
     >
@@ -800,7 +972,7 @@ function TicketStub({ shop, distance, expanded, onToggle, saved, onToggleSave, a
               <span className="inline-block mt-1 text-[10px] font-mono text-[var(--accent)]">📍 {cityLabel}</span>
             )}
             {visited && myRating > 0 && (
-              <div className="inline-flex items-center gap-1 mt-1.5 bg-[#FFF3E9] rounded-full pl-1.5 pr-2 py-0.5">
+              <div className="inline-flex items-center gap-1 mt-1.5 bg-[var(--chip-bg)] rounded-full pl-1.5 pr-2 py-0.5">
                 <span className="text-[9px] uppercase tracking-wider text-[#8A8478] font-mono">You rated</span>
                 <div className="flex items-center gap-[1px]">
                   {[1, 2, 3, 4, 5].map((i) => (
@@ -833,8 +1005,8 @@ function TicketStub({ shop, distance, expanded, onToggle, saved, onToggleSave, a
 
         {/* perforation */}
         <div className="relative h-0 border-t border-dashed border-[#E8D9CC] mx-4">
-          <div className="absolute -left-6 -top-2 w-4 h-4 rounded-full bg-[#FFF3E9]" />
-          <div className="absolute -right-6 -top-2 w-4 h-4 rounded-full bg-[#FFF3E9]" />
+          <div className="absolute -left-6 -top-2 w-4 h-4 rounded-full bg-[var(--chip-bg)]" />
+          <div className="absolute -right-6 -top-2 w-4 h-4 rounded-full bg-[var(--chip-bg)]" />
         </div>
 
         <div className="px-4 py-2.5 flex items-center gap-3 flex-wrap">
@@ -866,7 +1038,7 @@ function TicketStub({ shop, distance, expanded, onToggle, saved, onToggleSave, a
           <div className="border-t border-[#F0E4D8] px-4 pt-3 pb-4">
 
             {/* Tab bar */}
-            <div className="flex items-center gap-1 mb-3 bg-[#FFF3E9] rounded-full p-1 w-fit">
+            <div className="flex items-center gap-1 mb-3 bg-[var(--chip-bg)] rounded-full p-1 w-fit">
               {[
                 { key: "overview", label: "Overview", Icon: Info },
                 { key: "photos", label: "Photos", Icon: Image, show: hasPhotos },
@@ -920,7 +1092,7 @@ function TicketStub({ shop, distance, expanded, onToggle, saved, onToggleSave, a
                   </div>
                 ) : (
                   <div>
-                    <ShopArt shop={shop} height={110} />
+                    <ShopArt shop={shop} height={110} MascotIcon={MascotIcon} />
                     <p className="text-[11px] text-[#8A8478] italic mt-2 leading-relaxed">
                       No real photos loaded for this shop yet. In production this pulls from the Google
                       Places Photo API (drop image URLs into <code className="text-[#8A8478]">shop.photos</code>),
@@ -1037,6 +1209,16 @@ export default function Perch() {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("recommended");
   const [filters, setFilters] = useState({ outlets: false, parking: false, quiet: false });
+  const [themeKey, setThemeKey] = useState(() => {
+    try { return localStorage.getItem("perch:theme") === "matcha" ? "matcha" : "coffee"; }
+    catch { return "coffee"; }
+  });
+  const theme = THEMES[themeKey];
+  const Mascot = themeKey === "matcha" ? MatchaBuddy : LogoBuddy;
+  useEffect(() => {
+    try { localStorage.setItem("perch:theme", themeKey); } catch {}
+  }, [themeKey]);
+
   const [cityKey, setCityKey] = useState("norcross");
   const [cityInput, setCityInput] = useState("");
   const [cityNotFound, setCityNotFound] = useState(false);
@@ -1196,13 +1378,30 @@ export default function Perch() {
     return list;
   }, [baseList, query, filters, sort]);
 
-  async function handleCitySubmit(e) {
-    e.preventDefault();
-    const match = findCity(cityInput);
+  const [suggestions, setSuggestions] = useState([]);
+  const suggestionTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (!GOOGLE_PLACES_API_KEY) return;
+    if (cityInput.trim().length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    if (suggestionTimerRef.current) clearTimeout(suggestionTimerRef.current);
+    suggestionTimerRef.current = setTimeout(async () => {
+      const results = await autocompleteCities(cityInput);
+      setSuggestions(results);
+    }, 300);
+    return () => clearTimeout(suggestionTimerRef.current);
+  }, [cityInput]);
+
+  async function resolveCity(text) {
+    const match = findCity(text);
     if (match) {
       setCityKey(match.key);
       setExpandedId(SHOPS.find((s) => s.city === match.key)?.id ?? null);
       setCityInput("");
+      setSuggestions([]);
       setCityNotFound(false);
       setLiveError("");
       return;
@@ -1216,15 +1415,17 @@ export default function Perch() {
     setLiveLoading(true);
     setLiveError("");
     setCityNotFound(false);
+    setSuggestions([]);
     try {
-      const results = await searchLivePlaces(cityInput);
+      const results = await searchLivePlaces(text);
       if (results.length === 0) {
-        setLiveError(`No coffee shops found for "${cityInput}". Try a different spelling or a nearby city.`);
+        setLiveError(`No coffee shops found for "${text}". Try a different spelling or a nearby city.`);
       } else {
         setLiveShops(results);
-        setLiveLabel(cityInput);
+        setLiveLabel(text);
         setCityKey("live");
         setExpandedId(results[0].id);
+        setCityInput("");
       }
     } catch (err) {
       setLiveError(err.message || "Live search failed. Check your API key and try again.");
@@ -1233,11 +1434,21 @@ export default function Perch() {
     }
   }
 
+  async function handleCitySubmit(e) {
+    e.preventDefault();
+    await resolveCity(cityInput);
+  }
+
+  function selectSuggestion(s) {
+    resolveCity(s.fullText);
+  }
+
   function selectCity(key) {
     setCityKey(key);
     setView("browse");
     setExpandedId(SHOPS.find((s) => s.city === key)?.id ?? null);
     setCityInput("");
+    setSuggestions([]);
     setCityNotFound(false);
     setLiveError("");
   }
@@ -1250,8 +1461,8 @@ export default function Perch() {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-b from-[#FFF8F1] via-[#FFF3E9] to-[#FDEADB] text-[#171512]"
-      style={{ fontFamily: "'Inter', ui-sans-serif, system-ui", "--accent": city.accent, "--accent-glow": city.accent + "59" }}
+      className={`min-h-screen ${theme.bgClass} text-[#171512]`}
+      style={{ fontFamily: "'Inter', ui-sans-serif, system-ui", "--accent": theme.accent, "--accent-glow": theme.accent + "59", "--chip-bg": theme.chipBg, "--card-bg": theme.cardBg }}
     >
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <style>{`
@@ -1264,6 +1475,16 @@ export default function Perch() {
         .steam-wisp { animation: steamFloat 2.4s ease-in-out infinite; }
         .steam-wisp:nth-child(2) { animation-delay: 0.4s; }
         .steam-wisp:nth-child(3) { animation-delay: 0.8s; }
+        @keyframes wingFlapLeft {
+          0%, 100% { transform: rotate(0deg); }
+          50% { transform: rotate(-22deg); }
+        }
+        @keyframes wingFlapRight {
+          0%, 100% { transform: rotate(0deg); }
+          50% { transform: rotate(22deg); }
+        }
+        .wing-left { transform-box: fill-box; transform-origin: 90% 30%; animation: wingFlapLeft 1.6s ease-in-out infinite; }
+        .wing-right { transform-box: fill-box; transform-origin: 10% 30%; animation: wingFlapRight 1.6s ease-in-out infinite; }
         @keyframes logoFloat {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-3px); }
@@ -1290,54 +1511,64 @@ export default function Perch() {
             aria-label="Perch logo"
             className="relative logo-float cursor-pointer"
           >
-            <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 flex gap-0.5">
-              <span className="steam-wisp w-0.5 h-2 rounded-full bg-white/50 block" />
-              <span className="steam-wisp w-0.5 h-2 rounded-full bg-white/50 block" />
-              <span className="steam-wisp w-0.5 h-2 rounded-full bg-white/50 block" />
-            </div>
             <div
-              className={`w-9 h-9 rounded-full bg-[#FFF8F1] flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.2)] ${logoBounce ? "logo-bounce" : ""}`}
+              className={`w-20 h-20 rounded-full bg-[#FFF8F1] flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.2)] ${logoBounce ? "logo-bounce" : ""}`}
             >
-              <Coffee size={18} className="text-[var(--accent)]" />
+              <Mascot size={52} className="text-[var(--accent)]" />
             </div>
           </button>
           <div>
             <h1 className="text-xl font-semibold text-white" style={{ fontFamily: "'Fraunces', serif" }}>Perch</h1>
-            <p className="text-[11px] text-[#FFE9D6] -mt-0.5">☕ find your next cozy spot to settle in</p>
+            <p className="text-[11px] text-[#FFE9D6] -mt-0.5">{theme.tagline}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-mono text-[#FFE9D6] hidden sm:block">
-            {view === "saved" ? "Your saved spots" : view === "visited" ? "Places you've tried" : `📍 ${city.label}`}
-          </span>
-          <button
-            onClick={() => setView("browse")}
-            aria-label="Home"
-            title="Home"
-            className={`flex items-center justify-center w-8 h-8 rounded-full border transition-all
-              ${view === "browse" ? "bg-white text-[var(--accent)] border-white" : "bg-white/10 text-white border-white/30 hover:bg-white/20"}`}
-          >
-            <Home size={14} />
-          </button>
-          <button
-            onClick={() => setView("visited")}
-            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-all
-              ${view === "visited" ? "bg-white text-[var(--accent)] border-white" : "bg-white/10 text-white border-white/30 hover:bg-white/20"}`}
-          >
-            <CheckCircle2 size={13} fill={view === "visited" ? "var(--accent)" : "none"} strokeWidth={view === "visited" ? 0 : 2} />
-            Visited{visitedShops.size > 0 ? ` (${visitedShops.size})` : ""}
-          </button>
-          <button
-            onClick={() => setView("saved")}
-            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-all
-              ${view === "saved" ? "bg-white text-[var(--accent)] border-white" : "bg-white/10 text-white border-white/30 hover:bg-white/20"}`}
-          >
-            <Heart size={13} fill={view === "saved" ? "var(--accent)" : "none"} />
-            Saved{savedShops.size > 0 ? ` (${savedShops.size})` : ""}
-          </button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-white/10 border border-white/30 rounded-full p-0.5">
+            {Object.values(THEMES).map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setThemeKey(t.key)}
+                title={`${t.label} theme`}
+                className={`flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full transition-all
+                  ${themeKey === t.key ? "bg-white text-[var(--accent)]" : "text-white/80 hover:text-white"}`}
+              >
+                <span>{t.emoji}</span>
+                <span className="hidden lg:inline">{t.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center bg-white/10 border border-white/30 rounded-full p-0.5">
+            <button
+              onClick={() => setView("browse")}
+              title="Home"
+              className={`flex items-center justify-center w-8 h-8 rounded-full transition-all
+                ${view === "browse" ? "bg-white text-[var(--accent)]" : "text-white/80 hover:text-white"}`}
+            >
+              <Home size={14} />
+            </button>
+            <button
+              onClick={() => setView("visited")}
+              title="Visited"
+              className={`flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-full transition-all
+                ${view === "visited" ? "bg-white text-[var(--accent)]" : "text-white/80 hover:text-white"}`}
+            >
+              <CheckCircle2 size={14} fill={view === "visited" ? "var(--accent)" : "none"} strokeWidth={view === "visited" ? 0 : 2} />
+              {visitedShops.size > 0 && <span>{visitedShops.size}</span>}
+            </button>
+            <button
+              onClick={() => setView("saved")}
+              title="Saved"
+              className={`flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-full transition-all
+                ${view === "saved" ? "bg-white text-[var(--accent)]" : "text-white/80 hover:text-white"}`}
+            >
+              <Heart size={14} fill={view === "saved" ? "var(--accent)" : "none"} />
+              {savedShops.size > 0 && <span>{savedShops.size}</span>}
+            </button>
+          </div>
 
           {firebaseEnabled && (
-            <div className="flex items-center gap-2 pl-2 border-l border-white/25">
+            <div className="flex items-center">
               {authLoading ? (
                 <span className="text-[11px] text-white/60 font-mono">…</span>
               ) : user ? (
@@ -1353,7 +1584,7 @@ export default function Perch() {
                       {(user.displayName || user.email || "?")[0].toUpperCase()}
                     </div>
                   )}
-                  <span className="text-[11px] text-white font-medium max-w-[90px] truncate hidden sm:inline">
+                  <span className="text-[11px] text-white font-medium max-w-[90px] truncate hidden lg:inline">
                     {user.displayName || user.email}
                   </span>
                   <LogOut size={12} className="text-white/70" />
@@ -1361,10 +1592,11 @@ export default function Perch() {
               ) : (
                 <button
                   onClick={handleSignIn}
-                  className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white text-[var(--accent)] hover:bg-[#FFF3E9] transition-all"
+                  title="Sign in with Google"
+                  className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white text-[var(--accent)] hover:bg-[var(--chip-bg)] transition-all"
                 >
                   <LogIn size={13} />
-                  Sign in with Google
+                  <span className="hidden lg:inline">Sign in</span>
                 </button>
               )}
             </div>
@@ -1392,6 +1624,21 @@ export default function Perch() {
             }
             className="w-full bg-white border border-[#F0E4D8] rounded-full pl-10 pr-4 py-2.5 text-sm text-[#171512] placeholder-[#B5AFA0] outline-none shadow-[0_2px_8px_rgba(120,90,60,0.06)] focus:border-[var(--accent)] transition-shadow"
           />
+          {suggestions.length > 0 && (
+            <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-[#F0E4D8] rounded-2xl shadow-[0_8px_24px_rgba(120,90,60,0.12)] overflow-hidden z-20">
+              {suggestions.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => selectSuggestion(s)}
+                  className="w-full text-left px-4 py-2.5 hover:bg-[var(--chip-bg)] transition-colors flex items-baseline gap-2"
+                >
+                  <span className="text-sm text-[#171512] font-medium">{s.mainText}</span>
+                  <span className="text-xs text-[#8A8478]">{s.secondaryText}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </form>
 
         {liveLoading && (
@@ -1499,14 +1746,14 @@ export default function Perch() {
                 onNoteChange={(text) => updateNote(shop.id, text)}
                 myRating={visitedShops.get(shop.id)?.myRating ?? 0}
                 onRatingChange={(r) => updateRating(shop.id, r)}
-                accent={view !== "browse" ? shop.cityAccent : undefined}
                 cityLabel={view !== "browse" ? shop.cityLabel : undefined}
                 showDistance={view === "browse"}
+                MascotIcon={Mascot}
               />
             ))}
             {filtered.length === 0 && view === "saved" && (
               <div className="flex flex-col items-center text-center py-12">
-                <div className="text-5xl mb-3">🤎</div>
+                <Mascot size={96} className="text-[var(--accent)] mb-3 opacity-80" />
                 <p className="text-sm text-[#8A8478] max-w-xs">
                   No saved spots yet — tap the little heart on any card while browsing to keep it here.
                 </p>
@@ -1514,7 +1761,7 @@ export default function Perch() {
             )}
             {filtered.length === 0 && view === "visited" && (
               <div className="flex flex-col items-center text-center py-12">
-                <div className="text-5xl mb-3">📝</div>
+                <Mascot size={96} className="text-[var(--accent)] mb-3 opacity-80" />
                 <p className="text-sm text-[#8A8478] max-w-xs">
                   Nothing marked as visited yet — tap the checkmark on any card while browsing, then jot a note in its Notes tab.
                 </p>
@@ -1522,7 +1769,7 @@ export default function Perch() {
             )}
             {filtered.length === 0 && view === "browse" && (
               <div className="flex flex-col items-center text-center py-12">
-                <div className="text-5xl mb-3">🫙</div>
+                <Mascot size={96} className="text-[var(--accent)] mb-3 opacity-80" />
                 <p className="text-sm text-[#8A8478] max-w-xs">
                   No cozy spots match those vibes yet — try loosening a filter.
                 </p>
@@ -1533,7 +1780,7 @@ export default function Perch() {
       </div>
 
       <footer className="px-6 py-6 text-center text-[11px] text-[#B5AFA0] font-mono">
-        Made with 🤎. Data from Google Places, with workspace details from real reviews.
+        Made with {theme.heartEmoji}. Data from Google Places, with workspace details from real reviews.
       </footer>
     </div>
   );
