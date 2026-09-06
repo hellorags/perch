@@ -838,136 +838,134 @@ function LogoBuddy({ size = 24, className = "" }) {
     <svg ref={svgRef} width={size} height={size} viewBox="0 0 24 24" className={className}>
       {/* the branch it's perched on — fixed brown, same in both themes */}
       <g stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round" strokeLinecap="round">
-        <rect x="2.5" y="18" width="19" height="2" rx="1" fill="#8A6440" />
-        <path d="M4 18l-1.8-2.2" fill="none" />
-        <path d="M20 20l1.8 2" fill="none" />
+        <rect x="2.5" y="17.6" width="19" height="3.2" rx="1.6" fill="#8A6440" />
+        <path d="M6 18.2v2.2" stroke="#6E4E30" strokeWidth="0.5" fill="none" opacity="0.7" />
+        <path d="M10.5 18v2.6" stroke="#6E4E30" strokeWidth="0.5" fill="none" opacity="0.7" />
+        <path d="M17.5 18.1v2.4" stroke="#6E4E30" strokeWidth="0.5" fill="none" opacity="0.7" />
       </g>
 
-      {/* leaves sprouting off the branch — fixed green, same in both themes */}
-      <g fill="#6B8F4E" stroke="#3A2A1E" strokeWidth="0.5" strokeLinejoin="round">
-        <path d="M3.5 15.5c1.6.3 2.5 1.7 2.1 3.2c-1.7 0-3-1.4-2.1-3.2Z" />
-        <path d="M20.5 21.3c-1.6.3-2.9-.8-2.8-2.4c1.7-.3 3.2.8 2.8 2.4Z" />
-        <path d="M2 19.8c1.5-.4 2.9.4 3.1 2c-1.6.6-3.2-.3-3.1-2Z" />
+      {/* two big, clear leaves — fixed green, same in both themes */}
+      <g fill="#4F7A34" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round">
+        <path d="M2.5 19c-1.8-2.6-.7-5.6 2-6.8c1.6 3.1.3 6.2-2 6.8Z" />
+        <path d="M21.5 19c1.8-2.6.7-5.6-2-6.8c-1.6 3.1-.3 6.2 2 6.8Z" />
       </g>
 
       {/* the bird itself: one staple tan color, regardless of theme */}
       <g fill="#EAD3B0" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round">
         {/* feet */}
-        <ellipse cx="8.6" cy="18.2" rx="1.3" ry="1" />
-        <ellipse cx="15.4" cy="18.2" rx="1.3" ry="1" />
+        <ellipse cx="8.6" cy="18" rx="1.3" ry="1" />
+        <ellipse cx="15.4" cy="18" rx="1.3" ry="1" />
 
         {/* tail, sticking out the back */}
-        <path d="M16.3 16.4l3.2.7l-2 2.4Z" />
-        <path d="M17.2 14.7l3.5-.4l-1.7 2.9Z" />
+        <path d="M16.3 16.2l3.2.7l-2 2.4Z" />
+        <path d="M17.2 14.5l3.5-.4l-1.7 2.9Z" />
 
         {/* wings: flap via CSS animation */}
-        <ellipse className="wing-left" cx="5.4" cy="12.4" rx="2.6" ry="3.6" />
-        <ellipse className="wing-right" cx="18.6" cy="12.4" rx="2.6" ry="3.6" />
+        <ellipse className="wing-left" cx="5.4" cy="12.2" rx="2.6" ry="3.6" />
+        <ellipse className="wing-right" cx="18.6" cy="12.2" rx="2.6" ry="3.6" />
 
         {/* round bird body/head */}
-        <ellipse cx="12" cy="11.4" rx="7.3" ry="7" />
+        <ellipse cx="12" cy="11.2" rx="7.3" ry="7" />
       </g>
 
       {/* head feather tuft */}
-      <path d="M10.8 2.9l.6 1.8M12.5 2.4v2" stroke="#3A2A1E" strokeWidth="1.4" strokeLinecap="round" fill="none" />
+      <path d="M10.8 2.7l.6 1.8M12.5 2.2v2" stroke="#3A2A1E" strokeWidth="1.4" strokeLinecap="round" fill="none" />
 
       {/* belly patch for two-tone depth */}
-      <ellipse cx="12" cy="14.9" rx="4.2" ry="2.6" fill="#FFF8F1" opacity="0.5" stroke="#3A2A1E" strokeWidth="0.4" strokeOpacity="0.3" />
+      <ellipse cx="12" cy="14.7" rx="4.2" ry="2.6" fill="#FFF8F1" opacity="0.5" stroke="#3A2A1E" strokeWidth="0.4" strokeOpacity="0.3" />
 
       {/* eyebrows */}
-      <path d="M6.8 8.2c.9-.7 2-.7 2.9-.1" stroke="#3A2A1E" strokeWidth="1.1" strokeLinecap="round" fill="none" />
-      <path d="M17.2 8.2c-.9-.7-2-.7-2.9-.1" stroke="#3A2A1E" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+      <path d="M6.8 8c.9-.7 2-.7 2.9-.1" stroke="#3A2A1E" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+      <path d="M17.2 8c-.9-.7-2-.7-2.9-.1" stroke="#3A2A1E" strokeWidth="1.1" strokeLinecap="round" fill="none" />
 
       {/* beak */}
-      <path d="M10.6 13.2l1.4 1.7l1.4-1.7Z" fill="#3A2A1E" />
+      <path d="M10.6 13l1.4 1.7l1.4-1.7Z" fill="#3A2A1E" />
 
       {/* big eyes: white base stays put, pupil + sparkle track the cursor */}
-      <circle cx="8.6" cy="10.5" r="2.5" fill="#FFF8F1" stroke="#3A2A1E" strokeWidth="0.4" />
-      <circle cx="15.4" cy="10.5" r="2.5" fill="#FFF8F1" stroke="#3A2A1E" strokeWidth="0.4" />
+      <circle cx="8.6" cy="10.3" r="2.5" fill="#FFF8F1" stroke="#3A2A1E" strokeWidth="0.4" />
+      <circle cx="15.4" cy="10.3" r="2.5" fill="#FFF8F1" stroke="#3A2A1E" strokeWidth="0.4" />
       <g transform={`translate(${eye.x} ${eye.y})`}>
-        <circle cx="9.1" cy="11" r="1.35" fill="#3A2A1E" />
-        <circle cx="15.9" cy="11" r="1.35" fill="#3A2A1E" />
-        <circle cx="8.5" cy="10.3" r="0.5" fill="#FFF8F1" />
-        <circle cx="15.3" cy="10.3" r="0.5" fill="#FFF8F1" />
+        <circle cx="9.1" cy="10.8" r="1.35" fill="#3A2A1E" />
+        <circle cx="15.9" cy="10.8" r="1.35" fill="#3A2A1E" />
+        <circle cx="8.5" cy="10.1" r="0.5" fill="#FFF8F1" />
+        <circle cx="15.3" cy="10.1" r="0.5" fill="#FFF8F1" />
       </g>
 
       {/* blush */}
-      <ellipse cx="6.6" cy="13.2" rx="1.5" ry="1" fill="#FF9E8A" opacity="0.7" />
-      <ellipse cx="17.4" cy="13.2" rx="1.5" ry="1" fill="#FF9E8A" opacity="0.7" />
+      <ellipse cx="6.6" cy="13" rx="1.5" ry="1" fill="#FF9E8A" opacity="0.7" />
+      <ellipse cx="17.4" cy="13" rx="1.5" ry="1" fill="#FF9E8A" opacity="0.7" />
     </svg>
   );
 }
 
-// The matcha-theme counterpart — identical bird and identical branch (the
-// branch already has both brown and green built in, so it doesn't need to
-// change per theme). Only the head accessory differs: a leaf sprout
-// instead of a feather tuft, for a little thematic variety.
+// The matcha-theme counterpart — identical bird and identical branch.
+// Currently unused (the app always renders LogoBuddy regardless of theme)
+// but kept in sync in case that changes later.
 function MatchaBuddy({ size = 24, className = "" }) {
   const [svgRef, eye] = useEyeTracking(0.7);
   return (
     <svg ref={svgRef} width={size} height={size} viewBox="0 0 24 24" className={className}>
       {/* the branch it's perched on */}
       <g stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round" strokeLinecap="round">
-        <rect x="2.5" y="18" width="19" height="2" rx="1" fill="#8A6440" />
-        <path d="M4 18l-1.8-2.2" fill="none" />
-        <path d="M20 20l1.8 2" fill="none" />
+        <rect x="2.5" y="17.6" width="19" height="3.2" rx="1.6" fill="#8A6440" />
+        <path d="M6 18.2v2.2" stroke="#6E4E30" strokeWidth="0.5" fill="none" opacity="0.7" />
+        <path d="M10.5 18v2.6" stroke="#6E4E30" strokeWidth="0.5" fill="none" opacity="0.7" />
+        <path d="M17.5 18.1v2.4" stroke="#6E4E30" strokeWidth="0.5" fill="none" opacity="0.7" />
       </g>
 
-      {/* leaves sprouting off the branch */}
-      <g fill="#6B8F4E" stroke="#3A2A1E" strokeWidth="0.5" strokeLinejoin="round">
-        <path d="M3.5 15.5c1.6.3 2.5 1.7 2.1 3.2c-1.7 0-3-1.4-2.1-3.2Z" />
-        <path d="M20.5 21.3c-1.6.3-2.9-.8-2.8-2.4c1.7-.3 3.2.8 2.8 2.4Z" />
-        <path d="M2 19.8c1.5-.4 2.9.4 3.1 2c-1.6.6-3.2-.3-3.1-2Z" />
+      {/* two big, clear leaves */}
+      <g fill="#4F7A34" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round">
+        <path d="M2.5 19c-1.8-2.6-.7-5.6 2-6.8c1.6 3.1.3 6.2-2 6.8Z" />
+        <path d="M21.5 19c1.8-2.6.7-5.6-2-6.8c-1.6 3.1-.3 6.2 2 6.8Z" />
       </g>
 
       {/* the bird itself: same staple tan color as the coffee version */}
       <g fill="#EAD3B0" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round">
         {/* feet */}
-        <ellipse cx="8.6" cy="18.2" rx="1.3" ry="1" />
-        <ellipse cx="15.4" cy="18.2" rx="1.3" ry="1" />
+        <ellipse cx="8.6" cy="18" rx="1.3" ry="1" />
+        <ellipse cx="15.4" cy="18" rx="1.3" ry="1" />
 
         {/* tail, sticking out the back */}
-        <path d="M16.3 16.4l3.2.7l-2 2.4Z" />
-        <path d="M17.2 14.7l3.5-.4l-1.7 2.9Z" />
+        <path d="M16.3 16.2l3.2.7l-2 2.4Z" />
+        <path d="M17.2 14.5l3.5-.4l-1.7 2.9Z" />
 
         {/* wings: flap via CSS animation */}
-        <ellipse className="wing-left" cx="5.4" cy="12.4" rx="2.6" ry="3.6" />
-        <ellipse className="wing-right" cx="18.6" cy="12.4" rx="2.6" ry="3.6" />
+        <ellipse className="wing-left" cx="5.4" cy="12.2" rx="2.6" ry="3.6" />
+        <ellipse className="wing-right" cx="18.6" cy="12.2" rx="2.6" ry="3.6" />
 
         {/* round bird body/head */}
-        <ellipse cx="12" cy="11.4" rx="7.3" ry="7" />
+        <ellipse cx="12" cy="11.2" rx="7.3" ry="7" />
       </g>
 
       {/* leaf sprout instead of a feather tuft */}
-      <path d="M12 2.5c1.5.6 2.2 1.9 1.6 3.3c-1.5-.1-2.5-1.4-1.6-3.3Z" fill="#6B8F4E" stroke="#3A2A1E" strokeWidth="0.5" />
+      <path d="M12 2.3c1.5.6 2.2 1.9 1.6 3.3c-1.5-.1-2.5-1.4-1.6-3.3Z" fill="#4F7A34" stroke="#3A2A1E" strokeWidth="0.5" />
 
       {/* belly patch for two-tone depth */}
-      <ellipse cx="12" cy="14.9" rx="4.2" ry="2.6" fill="#FFF8F1" opacity="0.5" stroke="#3A2A1E" strokeWidth="0.4" strokeOpacity="0.3" />
+      <ellipse cx="12" cy="14.7" rx="4.2" ry="2.6" fill="#FFF8F1" opacity="0.5" stroke="#3A2A1E" strokeWidth="0.4" strokeOpacity="0.3" />
 
       {/* eyebrows */}
-      <path d="M6.8 8.2c.9-.7 2-.7 2.9-.1" stroke="#3A2A1E" strokeWidth="1.1" strokeLinecap="round" fill="none" />
-      <path d="M17.2 8.2c-.9-.7-2-.7-2.9-.1" stroke="#3A2A1E" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+      <path d="M6.8 8c.9-.7 2-.7 2.9-.1" stroke="#3A2A1E" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+      <path d="M17.2 8c-.9-.7-2-.7-2.9-.1" stroke="#3A2A1E" strokeWidth="1.1" strokeLinecap="round" fill="none" />
 
       {/* beak */}
-      <path d="M10.6 13.2l1.4 1.7l1.4-1.7Z" fill="#3A2A1E" />
+      <path d="M10.6 13l1.4 1.7l1.4-1.7Z" fill="#3A2A1E" />
 
       {/* big eyes: white base stays put, pupil + sparkle track the cursor */}
-      <circle cx="8.6" cy="10.5" r="2.5" fill="#FFF8F1" stroke="#3A2A1E" strokeWidth="0.4" />
-      <circle cx="15.4" cy="10.5" r="2.5" fill="#FFF8F1" stroke="#3A2A1E" strokeWidth="0.4" />
+      <circle cx="8.6" cy="10.3" r="2.5" fill="#FFF8F1" stroke="#3A2A1E" strokeWidth="0.4" />
+      <circle cx="15.4" cy="10.3" r="2.5" fill="#FFF8F1" stroke="#3A2A1E" strokeWidth="0.4" />
       <g transform={`translate(${eye.x} ${eye.y})`}>
-        <circle cx="9.1" cy="11" r="1.35" fill="#3A2A1E" />
-        <circle cx="15.9" cy="11" r="1.35" fill="#3A2A1E" />
-        <circle cx="8.5" cy="10.3" r="0.5" fill="#FFF8F1" />
-        <circle cx="15.3" cy="10.3" r="0.5" fill="#FFF8F1" />
+        <circle cx="9.1" cy="10.8" r="1.35" fill="#3A2A1E" />
+        <circle cx="15.9" cy="10.8" r="1.35" fill="#3A2A1E" />
+        <circle cx="8.5" cy="10.1" r="0.5" fill="#FFF8F1" />
+        <circle cx="15.3" cy="10.1" r="0.5" fill="#FFF8F1" />
       </g>
 
       {/* blush */}
-      <ellipse cx="6.6" cy="13.2" rx="1.5" ry="1" fill="#FF9E8A" opacity="0.7" />
-      <ellipse cx="17.4" cy="13.2" rx="1.5" ry="1" fill="#FF9E8A" opacity="0.7" />
+      <ellipse cx="6.6" cy="13" rx="1.5" ry="1" fill="#FF9E8A" opacity="0.7" />
+      <ellipse cx="17.4" cy="13" rx="1.5" ry="1" fill="#FF9E8A" opacity="0.7" />
     </svg>
   );
 }
-
 
 function Pill({ children, tone = "neutral" }) {
   const tones = {
