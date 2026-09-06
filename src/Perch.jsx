@@ -111,7 +111,12 @@ async function searchLivePlaces(cityText) {
       ].join(","),
     },
     body: JSON.stringify({
-      textQuery: `coffee shops good for working in ${cityText}`,
+      // regionCode biases (doesn't hard-filter) toward the US, and appending
+      // "USA" to the text itself gives a stronger disambiguating signal for
+      // city names that exist in multiple countries — e.g. "Rome, GA" vs
+      // "Rome, Italy." Users can still type the state for extra precision.
+      textQuery: `coffee shops good for working in ${cityText}${/\busa\b|united states/i.test(cityText) ? "" : ", USA"}`,
+      regionCode: "US",
       maxResultCount: 12,
     }),
   });
@@ -864,10 +869,10 @@ function TicketStub({ shop, distance, expanded, onToggle, saved, onToggleSave, a
             <div className="flex items-center gap-1 mb-3 bg-[#FFF3E9] rounded-full p-1 w-fit">
               {[
                 { key: "overview", label: "Overview", Icon: Info },
-                { key: "photos", label: "Photos", Icon: Image },
+                { key: "photos", label: "Photos", Icon: Image, show: hasPhotos },
                 { key: "menu", label: "Menu", Icon: BookOpen },
                 { key: "notes", label: "My Notes", Icon: StickyNote },
-              ].map((t) => (
+              ].filter((t) => t.show !== false).map((t) => (
                 <button
                   key={t.key}
                   onClick={(e) => { e.stopPropagation(); setTab(t.key); }}
@@ -1382,7 +1387,7 @@ export default function Perch() {
             onChange={(e) => { setCityInput(e.target.value); setCityNotFound(false); setLiveError(""); }}
             placeholder={
               GOOGLE_PLACES_API_KEY
-                ? `Currently browsing ${city.label} — search any US city...`
+                ? `Currently browsing ${city.label} — try "Rome, GA" or "Austin, TX"...`
                 : `Currently browsing ${city.label} — add an API key to search any US city`
             }
             className="w-full bg-white border border-[#F0E4D8] rounded-full pl-10 pr-4 py-2.5 text-sm text-[#171512] placeholder-[#B5AFA0] outline-none shadow-[0_2px_8px_rgba(120,90,60,0.06)] focus:border-[var(--accent)] transition-shadow"
