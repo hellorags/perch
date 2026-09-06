@@ -1591,7 +1591,7 @@ export default function Perch() {
         className="px-6 py-5 flex items-center justify-between flex-wrap gap-y-3 shadow-[0_2px_10px_rgba(0,0,0,0.08)]"
         style={{ backgroundColor: "var(--accent)" }}
       >
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-4">
           <button
             onClick={handleLogoClick}
             aria-label="Perch logo"
@@ -1604,8 +1604,8 @@ export default function Perch() {
             </div>
           </button>
           <div>
-            <h1 className="text-xl font-semibold text-white" style={{ fontFamily: "'Fraunces', serif" }}>Perch</h1>
-            <p className="text-[11px] text-[#FFE9D6] -mt-0.5">{theme.tagline}</p>
+            <h1 className="text-3xl font-semibold text-white" style={{ fontFamily: "'Fraunces', serif" }}>Perch</h1>
+            <p className="text-sm text-[#FFE9D6] -mt-0.5">{theme.tagline}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
