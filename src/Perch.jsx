@@ -822,7 +822,7 @@ function TicketStub({ shop, distance, expanded, onToggle, saved, onToggleSave, a
                 { key: "overview", label: "Overview", Icon: Info },
                 { key: "photos", label: "Photos", Icon: Image },
                 { key: "menu", label: "Menu", Icon: BookOpen },
-                { key: "notes", label: "Notes", Icon: StickyNote },
+                { key: "notes", label: "My Notes", Icon: StickyNote },
               ].map((t) => (
                 <button
                   key={t.key}
@@ -1158,11 +1158,11 @@ export default function Perch() {
           </button>
           <div>
             <h1 className="text-xl font-semibold text-white" style={{ fontFamily: "'Fraunces', serif" }}>Perch</h1>
-            <p className="text-[11px] text-white/70 -mt-0.5">☕ find your next cozy spot to settle in</p>
+            <p className="text-[11px] text-[#FFE9D6] -mt-0.5">☕ find your next cozy spot to settle in</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs font-mono text-white/70 hidden sm:block">
+          <span className="text-xs font-mono text-[#FFE9D6] hidden sm:block">
             {view === "saved" ? "Your saved spots" : view === "visited" ? "Places you've tried" : `📍 ${city.label}`}
           </span>
           <button
