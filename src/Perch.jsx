@@ -836,21 +836,23 @@ function LogoBuddy({ size = 24, className = "" }) {
   const [svgRef, eye] = useEyeTracking(0.7);
   return (
     <svg ref={svgRef} width={size} height={size} viewBox="0 0 24 24" className={className}>
-      {/* the branch it's perched on — fixed brown, same in both themes */}
-      <g stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round" strokeLinecap="round">
-        <rect x="2.5" y="16.6" width="19" height="3" rx="1.5" fill="#8A6440" />
-        <path d="M6 17.1v2" stroke="#6E4E30" strokeWidth="0.5" fill="none" opacity="0.7" />
-        <path d="M10.5 17v2.4" stroke="#6E4E30" strokeWidth="0.5" fill="none" opacity="0.7" />
-        <path d="M17.5 17.1v2.2" stroke="#6E4E30" strokeWidth="0.5" fill="none" opacity="0.7" />
-      </g>
+      {/* organic wavy branch with highlight/shadow shading, like a real tree branch */}
+      <path d="M1,18.3 C4.5,17.3 7.5,18.7 11,17.9 C14.5,17.1 17.5,18.5 23,17.6
+               L23,20.2 C17.5,21.6 14.5,20.2 11,21 C7.5,21.8 4.5,20.4 1,21.4 Z"
+            fill="#8A6440" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round" />
+      <path d="M1.3,21.1 C4.5,20.1 7.5,21.5 11,20.7 C14.5,19.9 17.5,21.2 22.7,19.9"
+            stroke="#B08659" strokeWidth="0.5" fill="none" opacity="0.8" strokeLinecap="round" />
+      <path d="M1.3,18.5 C4.5,17.6 7.5,19 11,18.2 C14.5,17.4 17.5,18.8 22.7,17.9"
+            stroke="#5C3F26" strokeWidth="0.5" fill="none" opacity="0.6" strokeLinecap="round" />
 
-      {/* leaves hanging just below the branch tips — pointed, with a center vein */}
-      <g>
-        <path d="M3 17.8C1.1 18.5 -0.1 20.3 0.2 22.6C2.3 21.8 3.7 19.7 3 17.8Z" fill="#4F7A34" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round" />
-        <path d="M2.6 18.4L0.7 22.1" stroke="#3A2A1E" strokeWidth="0.35" fill="none" opacity="0.6" />
-        <path d="M21 17.8C22.9 18.5 24.1 20.3 23.8 22.6C21.7 21.8 20.3 19.7 21 17.8Z" fill="#4F7A34" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round" />
-        <path d="M21.4 18.4L23.3 22.1" stroke="#3A2A1E" strokeWidth="0.35" fill="none" opacity="0.6" />
-      </g>
+      {/* leaves on little stems, two-tone shading for a glossy look */}
+      <path d="M3.3,18.3 L1.9,19.9" stroke="#3A2A1E" strokeWidth="0.5" fill="none" strokeLinecap="round" />
+      <path d="M1.9 19.7C0.4 20.4 -0.5 22 -0.1 23.6C1.6 22.9 2.7 21.1 1.9 19.7Z" fill="#5C9145" stroke="#3A2A1E" strokeWidth="0.55" strokeLinejoin="round" />
+      <path d="M1.9 19.7C1.1 21.1 0.8 22.4 -0.1 23.6C1.2 23.2 2.1 21.9 2.3 20.4C2.2 20.1 2 19.9 1.9 19.7Z" fill="#3F7A32" opacity="0.85" />
+
+      <path d="M20.7,17.7 L22.1,19.3" stroke="#3A2A1E" strokeWidth="0.5" fill="none" strokeLinecap="round" />
+      <path d="M22.1 19.1C23.6 19.8 24.5 21.4 24.1 23C22.4 22.3 21.3 20.5 22.1 19.1Z" fill="#5C9145" stroke="#3A2A1E" strokeWidth="0.55" strokeLinejoin="round" />
+      <path d="M22.1 19.1C22.9 20.5 23.2 21.8 24.1 23C22.8 22.6 21.9 21.3 21.7 19.8C21.8 19.5 22 19.3 22.1 19.1Z" fill="#3F7A32" opacity="0.85" />
 
       {/* the bird itself: one staple tan color, regardless of theme */}
       <g fill="#EAD3B0" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round">
@@ -907,21 +909,23 @@ function MatchaBuddy({ size = 24, className = "" }) {
   const [svgRef, eye] = useEyeTracking(0.7);
   return (
     <svg ref={svgRef} width={size} height={size} viewBox="0 0 24 24" className={className}>
-      {/* the branch it's perched on */}
-      <g stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round" strokeLinecap="round">
-        <rect x="2.5" y="16.6" width="19" height="3" rx="1.5" fill="#8A6440" />
-        <path d="M6 17.1v2" stroke="#6E4E30" strokeWidth="0.5" fill="none" opacity="0.7" />
-        <path d="M10.5 17v2.4" stroke="#6E4E30" strokeWidth="0.5" fill="none" opacity="0.7" />
-        <path d="M17.5 17.1v2.2" stroke="#6E4E30" strokeWidth="0.5" fill="none" opacity="0.7" />
-      </g>
+      {/* organic wavy branch with highlight/shadow shading, like a real tree branch */}
+      <path d="M1,18.3 C4.5,17.3 7.5,18.7 11,17.9 C14.5,17.1 17.5,18.5 23,17.6
+               L23,20.2 C17.5,21.6 14.5,20.2 11,21 C7.5,21.8 4.5,20.4 1,21.4 Z"
+            fill="#8A6440" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round" />
+      <path d="M1.3,21.1 C4.5,20.1 7.5,21.5 11,20.7 C14.5,19.9 17.5,21.2 22.7,19.9"
+            stroke="#B08659" strokeWidth="0.5" fill="none" opacity="0.8" strokeLinecap="round" />
+      <path d="M1.3,18.5 C4.5,17.6 7.5,19 11,18.2 C14.5,17.4 17.5,18.8 22.7,17.9"
+            stroke="#5C3F26" strokeWidth="0.5" fill="none" opacity="0.6" strokeLinecap="round" />
 
-      {/* leaves hanging just below the branch tips — pointed, with a center vein */}
-      <g>
-        <path d="M3 17.8C1.1 18.5 -0.1 20.3 0.2 22.6C2.3 21.8 3.7 19.7 3 17.8Z" fill="#4F7A34" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round" />
-        <path d="M2.6 18.4L0.7 22.1" stroke="#3A2A1E" strokeWidth="0.35" fill="none" opacity="0.6" />
-        <path d="M21 17.8C22.9 18.5 24.1 20.3 23.8 22.6C21.7 21.8 20.3 19.7 21 17.8Z" fill="#4F7A34" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round" />
-        <path d="M21.4 18.4L23.3 22.1" stroke="#3A2A1E" strokeWidth="0.35" fill="none" opacity="0.6" />
-      </g>
+      {/* leaves on little stems, two-tone shading for a glossy look */}
+      <path d="M3.3,18.3 L1.9,19.9" stroke="#3A2A1E" strokeWidth="0.5" fill="none" strokeLinecap="round" />
+      <path d="M1.9 19.7C0.4 20.4 -0.5 22 -0.1 23.6C1.6 22.9 2.7 21.1 1.9 19.7Z" fill="#5C9145" stroke="#3A2A1E" strokeWidth="0.55" strokeLinejoin="round" />
+      <path d="M1.9 19.7C1.1 21.1 0.8 22.4 -0.1 23.6C1.2 23.2 2.1 21.9 2.3 20.4C2.2 20.1 2 19.9 1.9 19.7Z" fill="#3F7A32" opacity="0.85" />
+
+      <path d="M20.7,17.7 L22.1,19.3" stroke="#3A2A1E" strokeWidth="0.5" fill="none" strokeLinecap="round" />
+      <path d="M22.1 19.1C23.6 19.8 24.5 21.4 24.1 23C22.4 22.3 21.3 20.5 22.1 19.1Z" fill="#5C9145" stroke="#3A2A1E" strokeWidth="0.55" strokeLinejoin="round" />
+      <path d="M22.1 19.1C22.9 20.5 23.2 21.8 24.1 23C22.8 22.6 21.9 21.3 21.7 19.8C21.8 19.5 22 19.3 22.1 19.1Z" fill="#3F7A32" opacity="0.85" />
 
       {/* the bird itself: same staple tan color as the coffee version */}
       <g fill="#EAD3B0" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round">
