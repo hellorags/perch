@@ -1,8 +1,7 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import {
   MapPin, Zap, Armchair, Car, Volume1, Volume2, VolumeX, Star,
   Clock, Search, Coffee, Phone, ChevronDown, X, Wifi, DollarSign, ImageOff, Heart,
-  Info, Image, BookOpen, Sparkles, CheckCircle2, StickyNote,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -17,10 +16,10 @@ import {
 // Each supported city gets real shop data *and* its own accent color — so
 // switching cities re-tints the whole app, not just the shop list.
 const CITIES = {
-  norcross: { key: "norcross", label: "Norcross, GA", emoji: "🌳", aliases: ["norcross", "norcross ga", "atlanta", "30071"], lat: 33.9412, lng: -84.2135, accent: "#6F4630" },
-  austin:   { key: "austin",   label: "Austin, TX",   emoji: "🌵", aliases: ["austin", "austin tx", "atx"],                   lat: 30.2672, lng: -97.7431, accent: "#6F4630" },
-  seattle:  { key: "seattle",  label: "Seattle, WA",  emoji: "🌧️", aliases: ["seattle", "seattle wa"],                        lat: 47.6062, lng: -122.3321, accent: "#6F4630" },
-  chicago:  { key: "chicago",  label: "Chicago, IL",  emoji: "🌆", aliases: ["chicago", "chicago il", "chi"],                 lat: 41.8781, lng: -87.6298, accent: "#6F4630" },
+  norcross: { key: "norcross", label: "Norcross, GA", aliases: ["norcross", "norcross ga", "atlanta", "30071"], lat: 33.9412, lng: -84.2135, accent: "#E8562E" },
+  austin:   { key: "austin",   label: "Austin, TX",   aliases: ["austin", "austin tx", "atx"],                   lat: 30.2672, lng: -97.7431, accent: "#1EA896" },
+  seattle:  { key: "seattle",  label: "Seattle, WA",  aliases: ["seattle", "seattle wa"],                        lat: 47.6062, lng: -122.3321, accent: "#4C6FEF" },
+  chicago:  { key: "chicago",  label: "Chicago, IL",  aliases: ["chicago", "chicago il", "chi"],                 lat: 41.8781, lng: -87.6298, accent: "#9B4FE8" },
 };
 const CITY_LIST = Object.values(CITIES);
 
@@ -37,7 +36,7 @@ function findCity(query) {
 // curated cities above instead of live results for anywhere else.
 // ---------------------------------------------------------------------------
 const GOOGLE_PLACES_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || "";
-const LIVE_ACCENT = "#6F4630";
+const LIVE_ACCENT = "#1E8F73"; // distinct teal so it's visually obvious you're in "live API" mode
 
 const DAY_ABBR = {
   Monday: "Mon", Tuesday: "Tue", Wednesday: "Wed", Thursday: "Thu",
@@ -65,32 +64,6 @@ function mapPriceLevel(level) {
   return map[level] ?? null;
 }
 
-function mapParkingOptions(po) {
-  if (!po) return "unknown";
-  if (po.freeParkingLot || po.paidParkingLot || po.freeGarageParking || po.paidGarageParking) return "lot";
-  if (po.freeStreetParking || po.paidStreetParking) return "street";
-  return "unknown";
-}
-
-// Google doesn't have literal "outlets available" or "noise level" fields.
-// We scan the review text it does return for the same kind of mentions a
-// human would look for — same technique used by hand for the curated
-// cities, just automated. This is a heuristic, not ground truth.
-function scanReviewsForSignals(reviews) {
-  if (!reviews || reviews.length === 0) return { outlets: "unknown", noise: "unknown" };
-  const text = reviews.map((r) => r.text?.text || "").join(" ").toLowerCase();
-  const outletWords = ["outlet", "plug", "charging port", "power outlet", "charger"];
-  const quietWords = ["quiet", "peaceful", "calm", "great for studying", "great for work", "great to work"];
-  const loudWords = ["loud", "noisy", "crowded", "packed", "chaotic"];
-  const hasOutlets = outletWords.some((w) => text.includes(w));
-  const quietScore = quietWords.filter((w) => text.includes(w)).length;
-  const loudScore = loudWords.filter((w) => text.includes(w)).length;
-  let noise = "unknown";
-  if (quietScore > 0 && quietScore >= loudScore) noise = "quiet";
-  else if (loudScore > 0) noise = "moderate";
-  return { outlets: hasOutlets ? "available" : "unknown", noise };
-}
-
 async function searchLivePlaces(cityText) {
   if (!GOOGLE_PLACES_API_KEY) {
     throw new Error("No Google Places API key configured (VITE_GOOGLE_PLACES_API_KEY missing).");
@@ -104,7 +77,6 @@ async function searchLivePlaces(cityText) {
         "places.id", "places.displayName", "places.formattedAddress", "places.location",
         "places.rating", "places.userRatingCount", "places.priceLevel",
         "places.regularOpeningHours", "places.internationalPhoneNumber", "places.photos",
-        "places.parkingOptions", "places.outdoorSeating", "places.reviews",
       ].join(","),
     },
     body: JSON.stringify({
@@ -121,36 +93,30 @@ async function searchLivePlaces(cityText) {
   const data = await res.json();
   const places = data.places || [];
 
-  return places.map((p) => {
-    const signals = scanReviewsForSignals(p.reviews);
-    const parking = mapParkingOptions(p.parkingOptions);
-    return {
-      id: p.id,
-      city: "live",
-      name: p.displayName?.text || "Unnamed shop",
-      address: p.formattedAddress || "Address not listed",
-      lat: p.location?.latitude ?? 0,
-      lng: p.location?.longitude ?? 0,
-      rating: p.rating ?? null,
-      ratingCount: p.userRatingCount ?? 0,
-      price: mapPriceLevel(p.priceLevel),
-      phone: p.internationalPhoneNumber || "Not listed",
-      hours: parseWeekdayDescriptions(p.regularOpeningHours?.weekdayDescriptions),
-      outlets: signals.outlets,
-      parking,
-      noise: signals.noise,
-      wifi: "unknown",
-      seating: p.outdoorSeating
-        ? "Indoor and outdoor seating available, per Google Places."
-        : "No community details reported for this live result yet — be the first to add one.",
-      popular: [],
-      specials: [],
-      tag: "Live result",
-      photos: (p.photos || []).slice(0, 3).map(
-        (photo) => `https://places.googleapis.com/v1/${photo.name}/media?maxWidthPx=600&key=${GOOGLE_PLACES_API_KEY}`
-      ),
-    };
-  });
+  return places.map((p) => ({
+    id: p.id,
+    city: "live",
+    name: p.displayName?.text || "Unnamed shop",
+    address: p.formattedAddress || "Address not listed",
+    lat: p.location?.latitude ?? 0,
+    lng: p.location?.longitude ?? 0,
+    rating: p.rating ?? null,
+    ratingCount: p.userRatingCount ?? 0,
+    price: mapPriceLevel(p.priceLevel),
+    phone: p.internationalPhoneNumber || "Not listed",
+    hours: parseWeekdayDescriptions(p.regularOpeningHours?.weekdayDescriptions),
+    outlets: "unknown",
+    parking: "unknown",
+    noise: "unknown",
+    wifi: "unknown",
+    seating: "No community details reported for this live result yet — be the first to add one.",
+    popular: [],
+    specials: [],
+    tag: "Live result",
+    photos: (p.photos || []).slice(0, 3).map(
+      (photo) => `https://places.googleapis.com/v1/${photo.name}/media?maxWidthPx=600&key=${GOOGLE_PLACES_API_KEY}`
+    ),
+  }));
 }
 
 const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -586,33 +552,6 @@ const SHOPS = [
 ];
 
 
-// ---------------------------------------------------------------------------
-// Persisting Saved and Visited lists in the browser via localStorage, so
-// they survive page reloads and closing the tab. Each is stored as a JSON
-// array of [id, shopData] pairs (Maps aren't directly JSON-serializable).
-// ---------------------------------------------------------------------------
-const STORAGE_KEYS = { saved: "perch:savedShops", visited: "perch:visitedShops" };
-
-function loadMapFromStorage(key) {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return new Map();
-    const entries = JSON.parse(raw);
-    return new Map(entries);
-  } catch {
-    return new Map();
-  }
-}
-
-function saveMapToStorage(key, map) {
-  try {
-    localStorage.setItem(key, JSON.stringify(Array.from(map.entries())));
-  } catch {
-    // Storage full or unavailable (e.g. private browsing) — fail silently,
-    // the app still works, it just won't persist this session.
-  }
-}
-
 function haversineMiles(a, b) {
   const R = 3958.8;
   const dLat = ((b.lat - a.lat) * Math.PI) / 180;
@@ -686,13 +625,7 @@ function ShopArt({ shop, height = 96 }) {
         <circle cx="60" cy="100" r="60" fill="#000000" opacity="0.1" />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="relative">
-          <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 flex gap-1">
-            <span className="steam-wisp w-0.5 h-2 rounded-full bg-black/25 block" />
-            <span className="steam-wisp w-0.5 h-2 rounded-full bg-black/25 block" />
-          </div>
-          <Coffee size={height > 80 ? 30 : 20} className="text-black/40" />
-        </div>
+        <Coffee size={height > 80 ? 30 : 20} className="text-black/40" />
       </div>
       <div className="absolute bottom-1.5 right-2 flex items-center gap-1 text-[9px] text-black/40 font-mono bg-white/40 px-1.5 py-0.5 rounded">
         <ImageOff size={9} /> placeholder
@@ -715,7 +648,7 @@ function Pill({ children, tone = "neutral" }) {
   );
 }
 
-function TicketStub({ shop, distance, expanded, onToggle, saved, onToggleSave, accent, cityLabel, showDistance = true, visited, onToggleVisited, note, onNoteChange }) {
+function TicketStub({ shop, distance, expanded, onToggle, saved, onToggleSave }) {
   const status = getOpenStatus(shop);
   const NoiseIcon = NOISE_ICON[shop.noise] || Volume2;
   const priceLabel = shop.price ? "$".repeat(shop.price) + " · Affordable" : "Pricing not listed";
@@ -729,43 +662,24 @@ function TicketStub({ shop, distance, expanded, onToggle, saved, onToggleSave, a
         ${expanded
           ? "shadow-[0_10px_30px_-8px_var(--accent-glow)] ring-2 ring-[var(--accent)] bg-[#FFF8F2]"
           : "shadow-[0_2px_10px_rgba(120,90,60,0.08)] hover:shadow-[0_8px_22px_rgba(120,90,60,0.14)] hover:-translate-y-0.5 bg-[#FFFFFF]"}`}
-      style={accent ? { "--accent": accent, "--accent-glow": accent + "59" } : undefined}
     >
-      <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
-        <button
-          onClick={(e) => { e.stopPropagation(); onToggleVisited(); }}
-          className="w-7 h-7 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-sm hover:scale-110 transition-transform"
-          aria-label="Mark visited"
-          title="Mark as visited"
-        >
-          <CheckCircle2 size={14} className={visited ? "text-[var(--accent)]" : "text-[#C7C2B6]"} fill={visited ? "var(--accent)" : "none"} strokeWidth={visited ? 0 : 1.5} />
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); onToggleSave(); }}
-          className="w-7 h-7 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-sm hover:scale-110 transition-transform"
-          aria-label="Save"
-        >
-          <Heart size={14} className={saved ? "text-[var(--accent)]" : "text-[#C7C2B6]"} fill={saved ? "var(--accent)" : "none"} />
-        </button>
-      </div>
+      <button
+        onClick={(e) => { e.stopPropagation(); onToggleSave(); }}
+        className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-sm hover:scale-110 transition-transform"
+        aria-label="Save"
+      >
+        <Heart size={14} className={saved ? "text-[var(--accent)]" : "text-[#C7C2B6]"} fill={saved ? "var(--accent)" : "none"} />
+      </button>
 
       <button onClick={onToggle} className="w-full text-left">
-        <div className="flex items-start justify-between px-4 pt-3 pb-2 pr-20">
+        <div className="flex items-start justify-between px-4 pt-3 pb-2 pr-10">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="font-semibold text-[#171512] truncate" style={{ fontFamily: "'Fraunces', serif" }}>
                 {shop.name}
               </h3>
-              {visited && (
-                <span className="shrink-0 flex items-center gap-0.5 text-[10px] font-mono text-[var(--accent)]">
-                  <CheckCircle2 size={11} /> visited
-                </span>
-              )}
             </div>
             <p className="text-xs text-[#8A8478] mt-0.5 truncate">{shop.address}</p>
-            {cityLabel && (
-              <span className="inline-block mt-1 text-[10px] font-mono text-[var(--accent)]">📍 {cityLabel}</span>
-            )}
           </div>
           <div className="flex items-start gap-2 shrink-0 ml-2">
             <div className="flex flex-col items-end">
@@ -773,7 +687,7 @@ function TicketStub({ shop, distance, expanded, onToggle, saved, onToggleSave, a
                 <Star size={13} fill="var(--accent)" strokeWidth={0} />
                 {shop.rating != null ? shop.rating.toFixed(1) : "—"}
               </div>
-              {showDistance && <span className="text-[10px] text-[#8A8478] font-mono">{distance.toFixed(1)} mi</span>}
+              <span className="text-[10px] text-[#8A8478] font-mono">{distance.toFixed(1)} mi</span>
             </div>
             <ChevronDown
               size={16}
@@ -819,18 +733,17 @@ function TicketStub({ shop, distance, expanded, onToggle, saved, onToggleSave, a
             {/* Tab bar */}
             <div className="flex items-center gap-1 mb-3 bg-[#FFF3E9] rounded-full p-1 w-fit">
               {[
-                { key: "overview", label: "Overview", Icon: Info },
-                { key: "photos", label: "Photos", Icon: Image },
-                { key: "menu", label: "Menu", Icon: BookOpen },
-                { key: "notes", label: "Notes", Icon: StickyNote },
+                { key: "overview", label: "Overview" },
+                { key: "photos", label: "Photos" },
+                { key: "menu", label: "Menu" },
               ].map((t) => (
                 <button
                   key={t.key}
                   onClick={(e) => { e.stopPropagation(); setTab(t.key); }}
-                  className={`flex items-center gap-1 text-[11px] font-medium px-3 py-1 rounded-full transition-colors
+                  className={`text-[11px] font-medium px-3 py-1 rounded-full transition-colors
                     ${tab === t.key ? "bg-[var(--accent)] text-[#FFFFFF]" : "text-[#8A8478] hover:text-[#171512]"}`}
                 >
-                  <t.Icon size={11} /> {t.label}
+                  {t.label}
                 </button>
               ))}
             </div>
@@ -913,46 +826,6 @@ function TicketStub({ shop, distance, expanded, onToggle, saved, onToggleSave, a
                 </p>
               </div>
             )}
-
-            {tab === "notes" && (
-              <div onClick={(e) => e.stopPropagation()}>
-                {visited ? (
-                  <>
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-[10px] uppercase tracking-widest text-[#8A8478] font-mono">Your notes</h4>
-                      <button
-                        onClick={onToggleVisited}
-                        className="text-[10px] font-mono text-[#8A8478] hover:text-[var(--accent)] underline"
-                      >
-                        unmark visited
-                      </button>
-                    </div>
-                    <textarea
-                      value={note || ""}
-                      onChange={(e) => onNoteChange(e.target.value)}
-                      placeholder="What did you order? Was it busy? Any tips for next time?"
-                      rows={4}
-                      className="w-full bg-[#FFFFFF] border border-[#E7E4DD] rounded-xl p-3 text-sm text-[#171512] placeholder-[#B5AFA0] outline-none focus:border-[var(--accent)] resize-none"
-                    />
-                    <p className="text-[10px] text-[#B5AFA0] mt-1.5">Saved automatically as you type.</p>
-                  </>
-                ) : (
-                  <div className="flex flex-col items-center text-center py-6">
-                    <CheckCircle2 size={28} className="text-[#C7C2B6] mb-2" />
-                    <p className="text-sm text-[#8A8478] max-w-[220px] mb-3">
-                      Mark this spot as visited to jot down your own notes and remember it later.
-                    </p>
-                    <button
-                      onClick={onToggleVisited}
-                      className="text-xs font-medium px-3.5 py-1.5 rounded-full text-white"
-                      style={{ backgroundColor: "var(--accent)" }}
-                    >
-                      Mark as visited
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -978,45 +851,7 @@ export default function Perch() {
     : CITIES[cityKey];
 
   const [expandedId, setExpandedId] = useState(SHOPS.find((s) => s.city === "norcross").id);
-  const [savedShops, setSavedShops] = useState(() => loadMapFromStorage(STORAGE_KEYS.saved));
-  const [visitedShops, setVisitedShops] = useState(() => loadMapFromStorage(STORAGE_KEYS.visited));
-
-  useEffect(() => { saveMapToStorage(STORAGE_KEYS.saved, savedShops); }, [savedShops]);
-  useEffect(() => { saveMapToStorage(STORAGE_KEYS.visited, visitedShops); }, [visitedShops]);
-  const [view, setView] = useState("browse"); // "browse" | "saved" | "visited"
-
-  function toggleSave(shop) {
-    setSavedShops((prev) => {
-      const next = new Map(prev);
-      if (next.has(shop.id)) {
-        next.delete(shop.id);
-      } else {
-        next.set(shop.id, { ...shop, cityAccent: city.accent, cityLabel: city.label });
-      }
-      return next;
-    });
-  }
-
-  function toggleVisited(shop) {
-    setVisitedShops((prev) => {
-      const next = new Map(prev);
-      if (next.has(shop.id)) {
-        next.delete(shop.id);
-      } else {
-        next.set(shop.id, { ...shop, cityAccent: city.accent, cityLabel: city.label, note: "", visitedAt: Date.now() });
-      }
-      return next;
-    });
-  }
-
-  function updateNote(shopId, text) {
-    setVisitedShops((prev) => {
-      if (!prev.has(shopId)) return prev;
-      const next = new Map(prev);
-      next.set(shopId, { ...next.get(shopId), note: text });
-      return next;
-    });
-  }
+  const [savedIds, setSavedIds] = useState(new Set());
 
   const citiesWithShops = useMemo(() => {
     if (cityKey === "live") {
@@ -1030,13 +865,8 @@ export default function Perch() {
     return SHOPS.map((s) => ({ ...s, distance: haversineMiles(city, s), score: workScore(s) })).filter((s) => s.city === cityKey);
   }, [cityKey, city, liveShops]);
 
-  const baseList =
-    view === "saved" ? Array.from(savedShops.values()) :
-    view === "visited" ? Array.from(visitedShops.values()) :
-    citiesWithShops;
-
   const filtered = useMemo(() => {
-    let list = baseList.filter((s) =>
+    let list = citiesWithShops.filter((s) =>
       s.name.toLowerCase().includes(query.toLowerCase()) ||
       s.address.toLowerCase().includes(query.toLowerCase())
     );
@@ -1049,7 +879,7 @@ export default function Perch() {
     else list = [...list].sort((a, b) => b.score - a.score);
 
     return list;
-  }, [baseList, query, filters, sort]);
+  }, [citiesWithShops, query, filters, sort]);
 
   async function handleCitySubmit(e) {
     e.preventDefault();
@@ -1090,17 +920,10 @@ export default function Perch() {
 
   function selectCity(key) {
     setCityKey(key);
-    setView("browse");
     setExpandedId(SHOPS.find((s) => s.city === key)?.id ?? null);
     setCityInput("");
     setCityNotFound(false);
     setLiveError("");
-  }
-
-  const [logoBounce, setLogoBounce] = useState(false);
-  function handleLogoClick() {
-    setLogoBounce(true);
-    setTimeout(() => setLogoBounce(false), 650);
   }
 
   return (
@@ -1118,74 +941,29 @@ export default function Perch() {
         }
         .steam-wisp { animation: steamFloat 2.4s ease-in-out infinite; }
         .steam-wisp:nth-child(2) { animation-delay: 0.4s; }
-        .steam-wisp:nth-child(3) { animation-delay: 0.8s; }
-        @keyframes logoFloat {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-3px); }
-        }
-        .logo-float { animation: logoFloat 3s ease-in-out infinite; }
-        @keyframes logoBounce {
-          0% { transform: scale(1) rotate(0deg); }
-          25% { transform: scale(1.18) rotate(-10deg); }
-          50% { transform: scale(0.92) rotate(8deg); }
-          75% { transform: scale(1.06) rotate(-4deg); }
-          100% { transform: scale(1) rotate(0deg); }
-        }
-        .logo-bounce { animation: logoBounce 0.6s ease-in-out; }
       `}</style>
 
       {/* Header */}
-      <header
-        className="px-6 py-5 flex items-center justify-between shadow-[0_2px_10px_rgba(0,0,0,0.08)]"
-        style={{ backgroundColor: "var(--accent)" }}
-      >
+      <header className="border-b border-[#F0E4D8] px-6 py-5 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <button
-            onClick={handleLogoClick}
-            aria-label="Perch logo"
-            className="relative logo-float cursor-pointer"
-          >
+          <div className="relative">
             <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 flex gap-0.5">
-              <span className="steam-wisp w-0.5 h-2 rounded-full bg-white/50 block" />
-              <span className="steam-wisp w-0.5 h-2 rounded-full bg-white/50 block" />
-              <span className="steam-wisp w-0.5 h-2 rounded-full bg-white/50 block" />
+              <span className="steam-wisp w-0.5 h-2 rounded-full bg-[var(--accent)]/50 block" />
+              <span className="steam-wisp w-0.5 h-2 rounded-full bg-[var(--accent)]/50 block" />
             </div>
-            <div
-              className={`w-9 h-9 rounded-full bg-[#FFF8F1] flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.2)] ${logoBounce ? "logo-bounce" : ""}`}
-            >
-              <Coffee size={18} className="text-[var(--accent)]" />
+            <div className="w-9 h-9 rounded-full bg-[var(--accent)] flex items-center justify-center shadow-[0_4px_12px_var(--accent-glow)]">
+              <Coffee size={18} className="text-[#FFF8F1]" />
             </div>
-          </button>
+          </div>
           <div>
-            <h1 className="text-xl font-semibold text-white" style={{ fontFamily: "'Fraunces', serif" }}>Perch</h1>
-            <p className="text-[11px] text-white/70 -mt-0.5">☕ find your next cozy spot to settle in</p>
+            <h1 className="text-xl font-semibold text-[#171512]" style={{ fontFamily: "'Fraunces', serif" }}>Perch</h1>
+            <p className="text-[11px] text-[#8A8478] -mt-0.5">☕ find your next cozy spot to settle in</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-mono text-white/70 hidden sm:block">
-            {view === "saved" ? "Your saved spots" : view === "visited" ? "Places you've tried" : `📍 ${city.label}`}
-          </span>
-          <button
-            onClick={() => setView((v) => (v === "visited" ? "browse" : "visited"))}
-            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-all
-              ${view === "visited" ? "bg-white text-[var(--accent)] border-white" : "bg-white/10 text-white border-white/30 hover:bg-white/20"}`}
-          >
-            <CheckCircle2 size={13} fill={view === "visited" ? "var(--accent)" : "none"} strokeWidth={view === "visited" ? 0 : 2} />
-            Visited{visitedShops.size > 0 ? ` (${visitedShops.size})` : ""}
-          </button>
-          <button
-            onClick={() => setView((v) => (v === "saved" ? "browse" : "saved"))}
-            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-all
-              ${view === "saved" ? "bg-white text-[var(--accent)] border-white" : "bg-white/10 text-white border-white/30 hover:bg-white/20"}`}
-          >
-            <Heart size={13} fill={view === "saved" ? "var(--accent)" : "none"} />
-            Saved{savedShops.size > 0 ? ` (${savedShops.size})` : ""}
-          </button>
-        </div>
+        <span className="text-xs font-mono text-[#B5AFA0] hidden sm:block">📍 {city.label}</span>
       </header>
 
       {/* City switcher */}
-      {view === "browse" && (
       <div className="max-w-2xl mx-auto px-6 pt-5">
         <form onSubmit={handleCitySubmit} className="relative mb-2">
           <MapPin size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--accent)]" />
@@ -1210,7 +988,7 @@ export default function Perch() {
         {cityNotFound && !GOOGLE_PLACES_API_KEY && (
           <p className="text-[11px] text-[#B5AFA0] mb-2 leading-relaxed">
             "{cityInput}" isn't one of the preloaded cities. Add a Google Places API key (see README) to
-            search any US city live — until then, try "Norcross", "Austin", "Seattle", or "Chicago".
+            search any US city live — until then, try one of the cities below.
           </p>
         )}
         {cityKey === "live" && liveShops.length > 0 && (
@@ -1219,8 +997,22 @@ export default function Perch() {
             <span className="text-[11px] font-mono text-[#8A8478]">Live results from Google Places for "{liveLabel}"</span>
           </div>
         )}
+
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
+          {CITY_LIST.map((c) => (
+            <button
+              key={c.key}
+              onClick={() => selectCity(c.key)}
+              className={`text-[11px] px-3 py-1 rounded-full border font-medium transition-all ${
+                cityKey === c.key ? "text-white" : "bg-white text-[#8A8478]"
+              }`}
+              style={cityKey === c.key ? { backgroundColor: c.accent, borderColor: c.accent } : { borderColor: "#F0E4D8" }}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
       </div>
-      )}
 
       <div className="max-w-2xl mx-auto px-6 py-6">
         <div>
@@ -1229,7 +1021,7 @@ export default function Perch() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={view === "saved" ? "Search your saved spots..." : view === "visited" ? "Search places you've visited..." : "Search shops or streets..."}
+              placeholder="Search shops or streets..."
               className="w-full bg-[#FFFFFF] border border-[#F0E4D8] rounded-full pl-10 pr-4 py-2.5 text-sm text-[#171512] placeholder-[#B5AFA0] outline-none shadow-[0_2px_8px_rgba(120,90,60,0.06)] focus:border-[var(--accent)] focus:shadow-[0_2px_12px_var(--accent-glow)] transition-shadow"
             />
           </div>
@@ -1268,27 +1060,7 @@ export default function Perch() {
             ))}
           </div>
 
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-[11px] text-[#B5AFA0] font-mono">
-              {view === "saved" ? `${filtered.length} saved spots` : view === "visited" ? `${filtered.length} places you've visited` : `${filtered.length} spots in ${city.label}`} · sorted by {sort}
-            </p>
-            {view === "saved" && savedShops.size > 0 && (
-              <button
-                onClick={() => { if (confirm("Clear all saved spots? This can't be undone.")) setSavedShops(new Map()); }}
-                className="text-[11px] font-mono text-[#B5AFA0] hover:text-[var(--accent)] underline"
-              >
-                Clear all
-              </button>
-            )}
-            {view === "visited" && visitedShops.size > 0 && (
-              <button
-                onClick={() => { if (confirm("Clear all visited spots and notes? This can't be undone.")) setVisitedShops(new Map()); }}
-                className="text-[11px] font-mono text-[#B5AFA0] hover:text-[var(--accent)] underline"
-              >
-                Clear all
-              </button>
-            )}
-          </div>
+          <p className="text-[11px] text-[#B5AFA0] mb-3 font-mono">{filtered.length} spots in {city.label} · sorted by {sort}</p>
 
           <div className="space-y-3">
             {filtered.map((shop) => (
@@ -1298,47 +1070,23 @@ export default function Perch() {
                 distance={shop.distance}
                 expanded={expandedId === shop.id}
                 onToggle={() => setExpandedId((cur) => (cur === shop.id ? null : shop.id))}
-                saved={savedShops.has(shop.id)}
-                onToggleSave={() => toggleSave(shop)}
-                visited={visitedShops.has(shop.id)}
-                onToggleVisited={() => toggleVisited(shop)}
-                note={visitedShops.get(shop.id)?.note ?? ""}
-                onNoteChange={(text) => updateNote(shop.id, text)}
-                accent={view !== "browse" ? shop.cityAccent : undefined}
-                cityLabel={view !== "browse" ? shop.cityLabel : undefined}
-                showDistance={view === "browse"}
+                saved={savedIds.has(shop.id)}
+                onToggleSave={() => setSavedIds((cur) => {
+                  const next = new Set(cur);
+                  next.has(shop.id) ? next.delete(shop.id) : next.add(shop.id);
+                  return next;
+                })}
               />
             ))}
-            {filtered.length === 0 && view === "saved" && (
-              <div className="flex flex-col items-center text-center py-12">
-                <div className="text-5xl mb-3">🤎</div>
-                <p className="text-sm text-[#8A8478] max-w-xs">
-                  No saved spots yet — tap the little heart on any card while browsing to keep it here.
-                </p>
-              </div>
-            )}
-            {filtered.length === 0 && view === "visited" && (
-              <div className="flex flex-col items-center text-center py-12">
-                <div className="text-5xl mb-3">📝</div>
-                <p className="text-sm text-[#8A8478] max-w-xs">
-                  Nothing marked as visited yet — tap the checkmark on any card while browsing, then jot a note in its Notes tab.
-                </p>
-              </div>
-            )}
-            {filtered.length === 0 && view === "browse" && (
-              <div className="flex flex-col items-center text-center py-12">
-                <div className="text-5xl mb-3">🫙</div>
-                <p className="text-sm text-[#8A8478] max-w-xs">
-                  No cozy spots match those vibes yet — try loosening a filter.
-                </p>
-              </div>
+            {filtered.length === 0 && (
+              <p className="text-sm text-[#B5AFA0] py-8 text-center">No cozy spots match those vibes yet 🥲 — try loosening a filter.</p>
             )}
           </div>
         </div>
       </div>
 
       <footer className="px-6 py-6 text-center text-[11px] text-[#B5AFA0] font-mono">
-        Made with 🤎. Data from Google Places, with workspace details from real reviews.
+        Made with ☕ + 🧡 · Data compiled from public listings & reviews near Norcross, GA — work-setup details are community-reported and may not be current
       </footer>
     </div>
   );
