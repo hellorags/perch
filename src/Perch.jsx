@@ -844,10 +844,12 @@ function LogoBuddy({ size = 24, className = "" }) {
         <path d="M17.5 17.1v2.2" stroke="#6E4E30" strokeWidth="0.5" fill="none" opacity="0.7" />
       </g>
 
-      {/* leaves hanging just below the branch tips */}
-      <g fill="#4F7A34" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round">
-        <path d="M3 18.3c-2.2.8-3.2 2.9-2.6 4.9c2.6-.2 4.3-2.1 2.6-4.9Z" />
-        <path d="M21 18.3c2.2.8 3.2 2.9 2.6 4.9c-2.6-.2-4.3-2.1-2.6-4.9Z" />
+      {/* leaves hanging just below the branch tips — pointed, with a center vein */}
+      <g>
+        <path d="M3 17.8C1.1 18.5 -0.1 20.3 0.2 22.6C2.3 21.8 3.7 19.7 3 17.8Z" fill="#4F7A34" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round" />
+        <path d="M2.6 18.4L0.7 22.1" stroke="#3A2A1E" strokeWidth="0.35" fill="none" opacity="0.6" />
+        <path d="M21 17.8C22.9 18.5 24.1 20.3 23.8 22.6C21.7 21.8 20.3 19.7 21 17.8Z" fill="#4F7A34" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round" />
+        <path d="M21.4 18.4L23.3 22.1" stroke="#3A2A1E" strokeWidth="0.35" fill="none" opacity="0.6" />
       </g>
 
       {/* the bird itself: one staple tan color, regardless of theme */}
@@ -913,10 +915,12 @@ function MatchaBuddy({ size = 24, className = "" }) {
         <path d="M17.5 17.1v2.2" stroke="#6E4E30" strokeWidth="0.5" fill="none" opacity="0.7" />
       </g>
 
-      {/* leaves hanging just below the branch tips */}
-      <g fill="#4F7A34" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round">
-        <path d="M3 18.3c-2.2.8-3.2 2.9-2.6 4.9c2.6-.2 4.3-2.1 2.6-4.9Z" />
-        <path d="M21 18.3c2.2.8 3.2 2.9 2.6 4.9c-2.6-.2-4.3-2.1-2.6-4.9Z" />
+      {/* leaves hanging just below the branch tips — pointed, with a center vein */}
+      <g>
+        <path d="M3 17.8C1.1 18.5 -0.1 20.3 0.2 22.6C2.3 21.8 3.7 19.7 3 17.8Z" fill="#4F7A34" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round" />
+        <path d="M2.6 18.4L0.7 22.1" stroke="#3A2A1E" strokeWidth="0.35" fill="none" opacity="0.6" />
+        <path d="M21 17.8C22.9 18.5 24.1 20.3 23.8 22.6C21.7 21.8 20.3 19.7 21 17.8Z" fill="#4F7A34" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round" />
+        <path d="M21.4 18.4L23.3 22.1" stroke="#3A2A1E" strokeWidth="0.35" fill="none" opacity="0.6" />
       </g>
 
       {/* the bird itself: same staple tan color as the coffee version */}
