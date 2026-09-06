@@ -715,7 +715,7 @@ function Pill({ children, tone = "neutral" }) {
   );
 }
 
-function TicketStub({ shop, distance, expanded, onToggle, saved, onToggleSave, accent, cityLabel, showDistance = true, visited, onToggleVisited, note, onNoteChange }) {
+function TicketStub({ shop, distance, expanded, onToggle, saved, onToggleSave, accent, cityLabel, showDistance = true, visited, onToggleVisited, note, onNoteChange, myRating = 0, onRatingChange }) {
   const status = getOpenStatus(shop);
   const NoiseIcon = NOISE_ICON[shop.noise] || Volume2;
   const priceLabel = shop.price ? "$".repeat(shop.price) + " · Affordable" : "Pricing not listed";
@@ -765,6 +765,22 @@ function TicketStub({ shop, distance, expanded, onToggle, saved, onToggleSave, a
             <p className="text-xs text-[#8A8478] mt-0.5 truncate">{shop.address}</p>
             {cityLabel && (
               <span className="inline-block mt-1 text-[10px] font-mono text-[var(--accent)]">📍 {cityLabel}</span>
+            )}
+            {visited && myRating > 0 && (
+              <div className="inline-flex items-center gap-1 mt-1.5 bg-[#FFF3E9] rounded-full pl-1.5 pr-2 py-0.5">
+                <span className="text-[9px] uppercase tracking-wider text-[#8A8478] font-mono">You rated</span>
+                <div className="flex items-center gap-[1px]">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <Star
+                      key={i}
+                      size={9}
+                      className={i <= myRating ? "text-[var(--accent)]" : "text-[#D8D4CB]"}
+                      fill={i <= myRating ? "var(--accent)" : "none"}
+                      strokeWidth={i <= myRating ? 0 : 1.5}
+                    />
+                  ))}
+                </div>
+              </div>
             )}
           </div>
           <div className="flex items-start gap-2 shrink-0 ml-2">
@@ -919,7 +935,7 @@ function TicketStub({ shop, distance, expanded, onToggle, saved, onToggleSave, a
                 {visited ? (
                   <>
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-[10px] uppercase tracking-widest text-[#8A8478] font-mono">Your notes</h4>
+                      <h4 className="text-[10px] uppercase tracking-widest text-[#8A8478] font-mono">My Notes</h4>
                       <button
                         onClick={onToggleVisited}
                         className="text-[10px] font-mono text-[#8A8478] hover:text-[var(--accent)] underline"
@@ -927,6 +943,29 @@ function TicketStub({ shop, distance, expanded, onToggle, saved, onToggleSave, a
                         unmark visited
                       </button>
                     </div>
+
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xs text-[#8A8478]">Your rating:</span>
+                      <div className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <button
+                            key={i}
+                            onClick={() => onRatingChange(i)}
+                            aria-label={`Rate ${i} star${i > 1 ? "s" : ""}`}
+                            className="hover:scale-125 transition-transform"
+                          >
+                            <Star
+                              size={18}
+                              className={i <= myRating ? "text-[var(--accent)]" : "text-[#D8D4CB]"}
+                              fill={i <= myRating ? "var(--accent)" : "none"}
+                              strokeWidth={i <= myRating ? 0 : 1.5}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                      {myRating > 0 && <span className="text-[10px] text-[#B5AFA0] font-mono">tap same star to clear</span>}
+                    </div>
+
                     <textarea
                       value={note || ""}
                       onChange={(e) => onNoteChange(e.target.value)}
@@ -1003,7 +1042,7 @@ export default function Perch() {
       if (next.has(shop.id)) {
         next.delete(shop.id);
       } else {
-        next.set(shop.id, { ...shop, cityAccent: city.accent, cityLabel: city.label, note: "", visitedAt: Date.now() });
+        next.set(shop.id, { ...shop, cityAccent: city.accent, cityLabel: city.label, note: "", myRating: 0, visitedAt: Date.now() });
       }
       return next;
     });
@@ -1014,6 +1053,16 @@ export default function Perch() {
       if (!prev.has(shopId)) return prev;
       const next = new Map(prev);
       next.set(shopId, { ...next.get(shopId), note: text });
+      return next;
+    });
+  }
+
+  function updateRating(shopId, rating) {
+    setVisitedShops((prev) => {
+      if (!prev.has(shopId)) return prev;
+      const next = new Map(prev);
+      const current = next.get(shopId);
+      next.set(shopId, { ...current, myRating: current.myRating === rating ? 0 : rating });
       return next;
     });
   }
@@ -1304,6 +1353,8 @@ export default function Perch() {
                 onToggleVisited={() => toggleVisited(shop)}
                 note={visitedShops.get(shop.id)?.note ?? ""}
                 onNoteChange={(text) => updateNote(shop.id, text)}
+                myRating={visitedShops.get(shop.id)?.myRating ?? 0}
+                onRatingChange={(r) => updateRating(shop.id, r)}
                 accent={view !== "browse" ? shop.cityAccent : undefined}
                 cityLabel={view !== "browse" ? shop.cityLabel : undefined}
                 showDistance={view === "browse"}
