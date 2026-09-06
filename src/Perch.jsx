@@ -836,9 +836,12 @@ function LogoBuddy({ size = 24, className = "" }) {
   const [svgRef, eye] = useEyeTracking(0.7);
   return (
     <svg ref={svgRef} width={size} height={size} viewBox="0 0 24 24" className={className}>
-      <g fill="currentColor" stroke="#2E2016" strokeWidth="0.6" strokeLinejoin="round">
-        {/* the cup it's perched on, plus two simple round feet */}
-        <path d="M6 17.5h12v2.3a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-2.3Z" opacity="0.55" />
+      {/* the cup it's perched on — stays in the theme's accent color */}
+      <path d="M6 17.5h12v2.3a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-2.3Z" fill="currentColor" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round" opacity="0.9" />
+
+      {/* the bird itself: one staple tan color, regardless of theme */}
+      <g fill="#EAD3B0" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round">
+        {/* feet */}
         <ellipse cx="8.6" cy="18.6" rx="1.3" ry="1" />
         <ellipse cx="15.4" cy="18.6" rx="1.3" ry="1" />
 
@@ -855,24 +858,24 @@ function LogoBuddy({ size = 24, className = "" }) {
       </g>
 
       {/* head feather tuft */}
-      <path d="M10.8 3.3l.6 1.8M12.5 2.8v2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" fill="none" />
+      <path d="M10.8 3.3l.6 1.8M12.5 2.8v2" stroke="#3A2A1E" strokeWidth="1.4" strokeLinecap="round" fill="none" />
 
       {/* belly patch for two-tone depth */}
-      <ellipse cx="12" cy="15.3" rx="4.2" ry="2.6" fill="#FFF8F1" opacity="0.3" stroke="#2E2016" strokeWidth="0.4" strokeOpacity="0.3" />
+      <ellipse cx="12" cy="15.3" rx="4.2" ry="2.6" fill="#FFF8F1" opacity="0.5" stroke="#3A2A1E" strokeWidth="0.4" strokeOpacity="0.3" />
 
       {/* eyebrows */}
-      <path d="M6.8 8.6c.9-.7 2-.7 2.9-.1" stroke="#2E2016" strokeWidth="1.1" strokeLinecap="round" fill="none" />
-      <path d="M17.2 8.6c-.9-.7-2-.7-2.9-.1" stroke="#2E2016" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+      <path d="M6.8 8.6c.9-.7 2-.7 2.9-.1" stroke="#3A2A1E" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+      <path d="M17.2 8.6c-.9-.7-2-.7-2.9-.1" stroke="#3A2A1E" strokeWidth="1.1" strokeLinecap="round" fill="none" />
 
       {/* beak */}
-      <path d="M10.6 13.6l1.4 1.7l1.4-1.7Z" fill="#2E2016" />
+      <path d="M10.6 13.6l1.4 1.7l1.4-1.7Z" fill="#3A2A1E" />
 
       {/* big eyes: white base stays put, pupil + sparkle track the cursor */}
-      <circle cx="8.6" cy="10.9" r="2.5" fill="#FFF8F1" stroke="#2E2016" strokeWidth="0.4" />
-      <circle cx="15.4" cy="10.9" r="2.5" fill="#FFF8F1" stroke="#2E2016" strokeWidth="0.4" />
+      <circle cx="8.6" cy="10.9" r="2.5" fill="#FFF8F1" stroke="#3A2A1E" strokeWidth="0.4" />
+      <circle cx="15.4" cy="10.9" r="2.5" fill="#FFF8F1" stroke="#3A2A1E" strokeWidth="0.4" />
       <g transform={`translate(${eye.x} ${eye.y})`}>
-        <circle cx="9.1" cy="11.4" r="1.35" fill="#2E2016" />
-        <circle cx="15.9" cy="11.4" r="1.35" fill="#2E2016" />
+        <circle cx="9.1" cy="11.4" r="1.35" fill="#3A2A1E" />
+        <circle cx="15.9" cy="11.4" r="1.35" fill="#3A2A1E" />
         <circle cx="8.5" cy="10.7" r="0.5" fill="#FFF8F1" />
         <circle cx="15.3" cy="10.7" r="0.5" fill="#FFF8F1" />
       </g>
@@ -884,16 +887,19 @@ function LogoBuddy({ size = 24, className = "" }) {
   );
 }
 
-// The matcha-theme counterpart — same bird, perched on a whisked bowl,
-// with a tiny leaf sprout instead of a feather tuft. Same outlines and
-// wing-flap animation applied for consistency across both themes.
+// The matcha-theme counterpart — same tan bird, same staple color, just
+// perched on a whisked bowl (theme-accent green) instead of a cup, with a
+// leaf sprout instead of a feather tuft.
 function MatchaBuddy({ size = 24, className = "" }) {
   const [svgRef, eye] = useEyeTracking(0.7);
   return (
     <svg ref={svgRef} width={size} height={size} viewBox="0 0 24 24" className={className}>
-      <g fill="currentColor" stroke="#26311A" strokeWidth="0.6" strokeLinejoin="round">
-        {/* the bowl it's perched on, plus two simple round feet */}
-        <path d="M5.5 17.5c0 2.6 2.9 4.3 6.5 4.3s6.5-1.7 6.5-4.3H5.5Z" opacity="0.55" />
+      {/* the bowl it's perched on — stays in the theme's accent color */}
+      <path d="M5.5 17.5c0 2.6 2.9 4.3 6.5 4.3s6.5-1.7 6.5-4.3H5.5Z" fill="currentColor" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round" opacity="0.9" />
+
+      {/* the bird itself: same staple tan color as the coffee version */}
+      <g fill="#EAD3B0" stroke="#3A2A1E" strokeWidth="0.6" strokeLinejoin="round">
+        {/* feet */}
         <ellipse cx="8.3" cy="18.6" rx="1.3" ry="1" />
         <ellipse cx="15.7" cy="18.6" rx="1.3" ry="1" />
 
@@ -910,24 +916,24 @@ function MatchaBuddy({ size = 24, className = "" }) {
       </g>
 
       {/* leaf sprout instead of a feather tuft */}
-      <path d="M12 2.9c1.5.6 2.2 1.9 1.6 3.3c-1.5-.1-2.5-1.4-1.6-3.3Z" fill="currentColor" stroke="#26311A" strokeWidth="0.5" />
+      <path d="M12 2.9c1.5.6 2.2 1.9 1.6 3.3c-1.5-.1-2.5-1.4-1.6-3.3Z" fill="#EAD3B0" stroke="#3A2A1E" strokeWidth="0.5" />
 
       {/* belly patch for two-tone depth */}
-      <ellipse cx="12" cy="15.3" rx="4.2" ry="2.6" fill="#FFF8F1" opacity="0.3" stroke="#26311A" strokeWidth="0.4" strokeOpacity="0.3" />
+      <ellipse cx="12" cy="15.3" rx="4.2" ry="2.6" fill="#FFF8F1" opacity="0.5" stroke="#3A2A1E" strokeWidth="0.4" strokeOpacity="0.3" />
 
       {/* eyebrows */}
-      <path d="M6.8 8.6c.9-.7 2-.7 2.9-.1" stroke="#26311A" strokeWidth="1.1" strokeLinecap="round" fill="none" />
-      <path d="M17.2 8.6c-.9-.7-2-.7-2.9-.1" stroke="#26311A" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+      <path d="M6.8 8.6c.9-.7 2-.7 2.9-.1" stroke="#3A2A1E" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+      <path d="M17.2 8.6c-.9-.7-2-.7-2.9-.1" stroke="#3A2A1E" strokeWidth="1.1" strokeLinecap="round" fill="none" />
 
       {/* beak */}
-      <path d="M10.6 13.6l1.4 1.7l1.4-1.7Z" fill="#26311A" />
+      <path d="M10.6 13.6l1.4 1.7l1.4-1.7Z" fill="#3A2A1E" />
 
       {/* big eyes: white base stays put, pupil + sparkle track the cursor */}
-      <circle cx="8.6" cy="10.9" r="2.5" fill="#FFF8F1" stroke="#26311A" strokeWidth="0.4" />
-      <circle cx="15.4" cy="10.9" r="2.5" fill="#FFF8F1" stroke="#26311A" strokeWidth="0.4" />
+      <circle cx="8.6" cy="10.9" r="2.5" fill="#FFF8F1" stroke="#3A2A1E" strokeWidth="0.4" />
+      <circle cx="15.4" cy="10.9" r="2.5" fill="#FFF8F1" stroke="#3A2A1E" strokeWidth="0.4" />
       <g transform={`translate(${eye.x} ${eye.y})`}>
-        <circle cx="9.1" cy="11.4" r="1.35" fill="#26311A" />
-        <circle cx="15.9" cy="11.4" r="1.35" fill="#26311A" />
+        <circle cx="9.1" cy="11.4" r="1.35" fill="#3A2A1E" />
+        <circle cx="15.9" cy="11.4" r="1.35" fill="#3A2A1E" />
         <circle cx="8.5" cy="10.7" r="0.5" fill="#FFF8F1" />
         <circle cx="15.3" cy="10.7" r="0.5" fill="#FFF8F1" />
       </g>
