@@ -6,21 +6,21 @@ Perch is a coffee-shop discovery app built for students and remote workers — t
 
 **[Live demo →](https://findyourperch.vercel.app)** · Built solo, from first commit to production deploy.
 
+_Prefer matcha over coffee? Switch between themes to represent your mood!_
 
 ![Perch demo](./demos/Perch.gif)
 
-Prefer matcha over coffee? Switch between themes to represent your mood!
-
+_Searching for coffee shops in Chicago, IL_
 
 ![Perch browse view](./demos/PerchCollapsed.png)
 
-Searching for coffee shops in Chicago, IL
 
+_Want to see more info on a specific cafe? 
+Simply expand the card to find out!_
 
 ![Perch expanded card](./demos/PerchExpanded.png)
 
-Want to see more info on a specific cafe? 
-Simply expand the card to find out!
+
 
 ---
 
