@@ -6,11 +6,11 @@ Perch is a coffee-shop discovery app built for students and remote workers — t
 
 **[Live demo →](https://findyourperch.vercel.app)** · Built solo, from first commit to production deploy.
 
-![Perch demo](.demos/Perch.gif)
+![Perch demo](./demos/Perch.gif)
 
-![Perch browse view](.demos/PerchCollapsed.png)
+![Perch browse view](./demos/PerchCollapsed.png)
 
-![Perch expanded card](.demos/PerchExpanded.png)
+![Perch expanded card](./demos/PerchExpanded.png)
 
 ---
 
