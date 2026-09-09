@@ -8,9 +8,9 @@ Perch is a coffee-shop discovery app built for students and remote workers — t
 
 ![Perch demo](.demos/Perch.gif)
 
-![Perch browse view](.demos/PerchCollapsed)
+![Perch browse view](.demos/PerchCollapsed.png)
 
-![Perch expanded card](.demos/PerchExpanded)
+![Perch expanded card](.demos/PerchExpanded.png)
 
 ---
 
